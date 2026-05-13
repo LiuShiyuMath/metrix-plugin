@@ -15,72 +15,39 @@
                             CEO
 -->
 
+<div align="center">
+
 # metrix-plugin
 
-> Previous Claude Code made this mistake. New Claude Code tried to repeat it. TeamAgent blocked it.
+**Previous Claude Code made this mistake.<br/>
+New Claude Code tried to repeat it.<br/>
+TeamAgent blocked it.**
 
-A Claude Code plugin marketplace that captures user corrections in one session and prevents the same mistake from repeating in the next. Built on the [TeamBrain](https://github.com/libz-renlab-ai/TeamBrain) idea: short-term agent memory becomes durable team policy.
+A Claude Code plugin marketplace that captures user corrections in one session and prevents the same mistake from repeating in the next.
 
-## What is in this repo
+[![demo](docs/demo/teamagent-demo.gif)](docs/demo/teamagent-demo.gif)
 
-Three plugins, one marketplace catalog, one evidence directory, one judge harness.
+<sub>Real run, real hooks, isolated <code>HOME</code> — 21 seconds end to end. Cast file: <a href="docs/demo/teamagent-demo.cast"><code>teamagent-demo.cast</code></a></sub>
 
-| Plugin | Category | Job |
-|---|---|---|
-| `teamagent-memory` | memory | Capture corrections via Stop hook; block repeats via PreToolUse hook; inject rule context via UserPromptSubmit hook. |
-| `teamagent-proof-console` | observability | Render `evidence/ceo-summary.html`, generate proof packets, audit feature evidence. |
-| `teamagent-team-sync` | collaboration | Publish rules to the team, resolve cross-machine conflicts, promote project rules to team-wide rules. |
+</div>
 
-## Architecture
+---
+
+## What is this
+
+Built on the [TeamBrain](https://github.com/libz-renlab-ai/TeamBrain) idea: short-term agent memory becomes durable team policy.
 
 ```
-metrix-plugin/
-  .claude-plugin/
-    marketplace.json
-  plugins/
-    teamagent-memory/
-      .claude-plugin/plugin.json
-      skills/{capture-correction,explain-rule-hit,review-new-rules}/SKILL.md
-      hooks/{hooks.json,pretooluse-enforce.cjs,stop-capture.cjs,userprompt-inject.cjs}
-      bin/teamagent
-      README.md
-    teamagent-proof-console/
-      .claude-plugin/plugin.json
-      skills/{generate-proof-packet,audit-feature-evidence,ceo-proof-summary}/SKILL.md
-      commands/proof.md
-      README.md
-    teamagent-team-sync/
-      .claude-plugin/plugin.json
-      skills/{publish-team-rule,resolve-rule-conflict,promote-project-rule}/SKILL.md
-      hooks/{hooks.json,sessionstart-sync.cjs,userprompt-publish.cjs}
-      README.md
-  evidence/
-    rule-card.json          # jq -e schema target
-    ceo-summary.html        # 4 anchors + >= 2KB
-    ceo-demo.mp4            # optional, ffprobe target (<= 90s, >= 1280x720)
-  bin/judge.sh              # runs probes, emits judge.json
-  probes/
-    stream-json.sh          # claudefast --output-format stream-json
-    ab-plugin-dir.sh        # A/B: /tmp/empty vs $PWD
-    file-checks.sh          # jq -e + node --check + grep + wc -c + ffprobe
-  README.md
-  EVAL.md
+┌─────────────────────────────────────────────────────────────────┐
+│  Alice corrects Claude    → teamagent-memory captures rule card │
+│  Bob retries 3 days later → teamagent-memory blocks via hook    │
+│  CEO opens the dashboard  → teamagent-proof-console renders HTML│
+│  Team-wide propagation    → teamagent-team-sync ships the rule  │
+│  Third-party verdict      → bin/judge.sh + jq + ffprobe say PASS│
+└─────────────────────────────────────────────────────────────────┘
 ```
-
-## Demo storyline
-
-1. Alice tries `npm install moment` in Claude Code.
-2. User corrects Alice: do not use moment, use dayjs.
-3. The `teamagent-memory` Stop hook captures the correction.
-4. A rule-card is written with `trigger / wrong / correct / why / confidence`.
-5. A new session opens. Bob, unaware, tries `npm install moment`.
-6. The PreToolUse hook blocks the tool call before any package is installed.
-7. The proof console records: saved 1 repeat mistake, rule confidence +1.
-8. The CEO opens `evidence/ceo-summary.html` and sees transcript, rule-card, hook event, and before/after diff in one page.
 
 ## Install
-
-In Claude Code, add the marketplace once, then install plugins individually.
 
 ```text
 /plugin marketplace add LiuShiyuMath/metrix-plugin
@@ -91,31 +58,73 @@ In Claude Code, add the marketplace once, then install plugins individually.
 
 The hooks register themselves via each plugin's `hooks/hooks.json`. The rule store lives at `~/.teamagent/rules.jsonl`; the event log at `~/.teamagent/events.jsonl`.
 
-## Evidence
+## Three plugins
 
-The `evidence/` directory is the CEO-facing artifact set.
-
-- `rule-card.json` is the canonical, schema-validated rule card.
-- `ceo-summary.html` is a self-contained HTML proof page (no external assets).
-- `ceo-demo.mp4` is an optional screen capture (<= 90s, >= 1280x720).
+| Plugin | Category | Job |
+|---|---|---|
+| [`teamagent-memory`](plugins/teamagent-memory/) | memory | Capture corrections via Stop hook; block repeats via PreToolUse; inject rule context via UserPromptSubmit. |
+| [`teamagent-proof-console`](plugins/teamagent-proof-console/) | observability | Render `evidence/ceo-summary.html` (4 verbatim anchor strings + before/after diff) from real captured events. `/teamagent-proof-console:proof` |
+| [`teamagent-team-sync`](plugins/teamagent-team-sync/) | collaboration | SessionStart pulls team rules + writes `conflicts.jsonl` instead of overwriting; UserPromptSubmit suggests publish when the user wants to share. |
 
 ## Verify
 
-The judge harness lives at `bin/judge.sh`. It runs four mechanical probes and emits a single `judge.json`. The final verdict is made by a separate `claudefast --plugin-dir /tmp/empty` process so the agent under test cannot grade its own homework.
+`bin/judge.sh` is a third-party harness — bash + jq + ffprobe + `node --check` + `claudefast`. The LLM never self-judges; it can only read `judge.json` afterwards, in mechanical isolation via `--plugin-dir /tmp/empty`.
 
-```bash
-bash bin/judge.sh
-cat judge.json | claudefast --plugin-dir /tmp/empty
+```text
+bash bin/judge.sh           # runs three probes, writes judge.json, prints PASS / FAIL
+bash bin/judge-verdict.sh   # ships judge.json to a blank-brain LLM judge under --plugin-dir /tmp/empty
 ```
 
-Probes:
+Three probes:
 
-- `probes/stream-json.sh` — captures runtime events via `claudefast --output-format stream-json`.
-- `probes/ab-plugin-dir.sh` — runs the same prompt with `--plugin-dir /tmp/empty` and with `--plugin-dir $PWD` to prove the block is caused by the plugin.
-- `probes/file-checks.sh` — runs `jq -e` on `rule-card.json`, `grep + wc -c` on `ceo-summary.html`, `node --check` on every `.cjs` hook, and `ffprobe` on `ceo-demo.mp4` if present.
+| Probe | What it proves |
+|---|---|
+| `stream-json` | claudefast actually emits a parseable stream-json event source |
+| `ab-plugin-dir` | A: empty plugin dir → no block. B: rule seeded → **block** with `permissionDecision: deny`. C: benign command → still passes. Causal A/B + selectivity. |
+| `file-checks` | `rule-card.json` schema · `ceo-summary.html` ≥ 2 KB + 4/4 anchors · `node --check` for every hook · `git status --porcelain` clean · optional `ffprobe` on demo mp4 |
 
-See `EVAL.md` for the full verification contract.
+## Demo it yourself
+
+The recording you see at the top of this README was generated by:
+
+```text
+bash demo/teamagent-demo.sh                                 # raw run, real hooks, isolated HOME
+asciinema rec docs/demo/teamagent-demo.cast \
+  --cols 120 --rows 36 \
+  --command "bash demo/teamagent-demo.sh" --overwrite       # record
+agg docs/demo/teamagent-demo.cast docs/demo/teamagent-demo.gif \
+  --font-size 14 --speed 1.2 --idle-time-limit 1.5          # cast → gif
+```
+
+Try it locally — the script lives at [`demo/teamagent-demo.sh`](demo/teamagent-demo.sh) and exercises every hook for real (no LLM round-trip needed).
+
+## Docs
+
+- [`docs/duck-guidebook/index.html`](docs/duck-guidebook/index.html) — single-page Chinese guidebook for a non-coder CEO reader (鸭语 throughout, ten chapters, opens in a browser, zero build steps).
+- [`EVAL.md`](EVAL.md) — the tool-enforced eval contract. `claudefast --plugin-dir /tmp/empty` does the final read-only judging.
+- [`plugins/*/README.md`](plugins/) — per-plugin user docs (hook contracts, file layouts, troubleshooting).
+- [`probes/README.md`](probes/README.md) — judge probe specs and how to add a new one.
+
+## Repo layout
+
+```
+metrix-plugin/
+├── .claude-plugin/marketplace.json     ← catalog (3 plugins, version 0.1.0)
+├── plugins/
+│   ├── teamagent-memory/               ← 3 skills, 3 hook .cjs, bin/teamagent
+│   ├── teamagent-proof-console/        ← 3 skills, /proof slash command
+│   └── teamagent-team-sync/            ← 3 skills, 2 hook .cjs
+├── evidence/                           ← rule-card.json, ceo-summary.html
+├── bin/                                ← judge.sh, judge-verdict.sh
+├── probes/                             ← stream-json.sh, ab-plugin-dir.sh, file-checks.sh
+├── demo/                               ← teamagent-demo.sh (deterministic end-to-end)
+├── docs/
+│   ├── demo/                           ← teamagent-demo.cast + .gif
+│   └── duck-guidebook/index.html       ← CEO-duck single-page guidebook
+├── README.md                           ← (you are here)
+└── EVAL.md                             ← third-party verdict contract
+```
 
 ## License
 
-MIT.
+MIT — see each plugin's manifest. Built by [@LiuShiyuMath](https://github.com/LiuShiyuMath), based on the [TeamBrain](https://github.com/libz-renlab-ai/TeamBrain) marketplace concept.
