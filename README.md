@@ -27,7 +27,7 @@ A Claude Code plugin marketplace that captures user corrections in one session a
 
 [![demo](docs/demo/teamagent-demo.gif)](docs/demo/teamagent-demo.gif)
 
-<sub>Real run, real hooks, isolated <code>HOME</code> — 21 seconds end to end. Cast file: <a href="docs/demo/teamagent-demo.cast"><code>teamagent-demo.cast</code></a></sub>
+<sub>Real interactive <code>claudefast</code> session in tmux — two distinct Claude Code sessions, real model round-trip, real PreToolUse denial rendered by the TUI. 72 s end to end (idle compressed). Cast file: <a href="docs/demo/teamagent-demo.cast"><code>teamagent-demo.cast</code></a>. Earlier mock recording archived at <a href="docs/demo/archive/"><code>docs/demo/archive/</code></a>.</sub>
 
 </div>
 
