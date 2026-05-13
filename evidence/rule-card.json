@@ -1,0 +1,17 @@
+{
+  "id": "rule-2026-05-13-moment-dayjs",
+  "trigger": {
+    "tool": "Bash",
+    "pattern": "npm install moment"
+  },
+  "wrong": "Adopting moment.js as a new dependency",
+  "correct": "Use dayjs (smaller, immutable, modern API)",
+  "why": "Maintainer-recommended migration; moment is in maintenance mode and bundles ~70KB of legacy locale code",
+  "confidence": 1,
+  "captured_at": "2026-05-13T00:00:00Z",
+  "session_origin": "alice-session-abc",
+  "evidence": {
+    "transcript_path": "evidence/transcripts/alice-session-abc.jsonl",
+    "hook_event_id": "stop-2026-05-13T00:00:00Z-abc"
+  }
+}

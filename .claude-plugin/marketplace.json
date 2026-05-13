@@ -1,0 +1,57 @@
+{
+  "name": "metrix-plugin",
+  "owner": {
+    "name": "libz-renlab-ai",
+    "email": "abcdefg@uoem.edu.gr"
+  },
+  "description": "metrix-plugin marketplace · TeamAgent: capture corrections in one Claude Code session, block repeats in the next, prove it to the CEO.",
+  "homepage": "https://github.com/libz-renlab-ai/TeamBrain",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "teamagent-memory",
+      "source": "./plugins/teamagent-memory",
+      "description": "Capture user corrections as rule cards in one session and block the same mistake from repeating in the next via PreToolUse, Stop, and UserPromptSubmit hooks.",
+      "version": "0.1.0",
+      "category": "memory",
+      "tags": [
+        "memory",
+        "hooks",
+        "rule-card",
+        "teambrain",
+        "correction-capture",
+        "pretooluse"
+      ]
+    },
+    {
+      "name": "teamagent-proof-console",
+      "source": "./plugins/teamagent-proof-console",
+      "description": "Generate CEO-grade proof packets that show transcript, rule card, hook event, and before/after diff for every blocked repeat mistake.",
+      "version": "0.1.0",
+      "category": "observability",
+      "tags": [
+        "observability",
+        "proof",
+        "audit",
+        "ceo",
+        "evidence",
+        "before-after"
+      ]
+    },
+    {
+      "name": "teamagent-team-sync",
+      "source": "./plugins/teamagent-team-sync",
+      "description": "Publish project rules to the team, resolve rule conflicts across machines, and promote local rule cards to shared team rules via SessionStart and UserPromptSubmit hooks.",
+      "version": "0.1.0",
+      "category": "collaboration",
+      "tags": [
+        "collaboration",
+        "sync",
+        "team",
+        "rules",
+        "conflict-resolution",
+        "promotion"
+      ]
+    }
+  ]
+}

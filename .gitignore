@@ -1,0 +1,6 @@
+judge.json
+probes/*.out
+evidence/ceo-demo.mp4
+node_modules/
+.DS_Store
+.judge/

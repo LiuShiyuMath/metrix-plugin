@@ -1,0 +1,19 @@
+{
+  "name": "teamagent-team-sync",
+  "description": "Sync rule cards across a team: publish local rules to a shared store, resolve conflicts on import, promote project-local rules to team-wide.",
+  "version": "0.1.0",
+  "author": {
+    "name": "libz-renlab-ai"
+  },
+  "homepage": "https://github.com/libz-renlab-ai/TeamBrain",
+  "license": "MIT",
+  "keywords": [
+    "teamagent",
+    "team-sync",
+    "rules",
+    "hooks",
+    "claude-code",
+    "shared-memory",
+    "conflict-resolution"
+  ]
+}
