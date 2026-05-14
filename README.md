@@ -101,6 +101,8 @@ Try it locally — the script lives at [`demo/teamagent-demo.sh`](demo/teamagent
 ## Docs
 
 - [`docs/duck-guidebook/index.html`](docs/duck-guidebook/index.html) — single-page Chinese guidebook for a non-coder CEO reader (鸭语 throughout, ten chapters, opens in a browser, zero build steps).
+- [`docs/demo/teamagent-wild.gif`](docs/demo/teamagent-wild.gif) — real-machine 4-pane tmux recording with separate `HOME` / `CLAUDE_HOME` lanes.
+- [`demo/teamagent-sandbox-server.cjs`](demo/teamagent-sandbox-server.cjs) — local clickable browser console that controls a real tmux sandbox; Alice is user-controlled and Leader watches changes.
 - [`EVAL.md`](EVAL.md) — the tool-enforced eval contract. `claudefast --plugin-dir /tmp/empty` does the final read-only judging.
 - [`plugins/*/README.md`](plugins/) — per-plugin user docs (hook contracts, file layouts, troubleshooting).
 - [`probes/README.md`](probes/README.md) — judge probe specs and how to add a new one.
