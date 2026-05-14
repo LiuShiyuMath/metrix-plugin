@@ -1,0 +1,19 @@
+{
+  "name": "teamagent-proof-console",
+  "description": "Generate proof packets, audit feature evidence, render CEO-ready summary HTML showing 'before/after' a TeamAgent rule blocked a repeat mistake.",
+  "version": "0.1.0",
+  "author": {
+    "name": "libz-renlab-ai"
+  },
+  "homepage": "https://github.com/libz-renlab-ai/TeamBrain",
+  "license": "MIT",
+  "keywords": [
+    "teamagent",
+    "proof",
+    "evidence",
+    "ceo-summary",
+    "audit",
+    "before-after",
+    "rule-card"
+  ]
+}

@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TeamAgent · 给 CEO 鸭鸭的小册子</title>
+<style>
+  :root{
+    --pond:#7fb8d4;
+    --pond-deep:#3f7fa3;
+    --duck:#f7c948;
+    --duck-deep:#c89a1a;
+    --cream:#fffbe6;
+    --paper:#fff8d6;
+    --ink:#1c2024;
+    --muted:#6b6f76;
+    --line:#e9d97a;
+    --mono:ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans:-apple-system, "PingFang SC", "Microsoft Yahei", "Noto Sans CJK SC", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7}
+  body{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  /* Sidebar */
+  nav.toc{
+    position:sticky;top:0;align-self:start;
+    height:100vh;overflow-y:auto;
+    padding:24px 18px;
+    background:linear-gradient(180deg,#fff5b8 0%,#ffe98a 100%);
+    border-right:2px solid var(--line);
+  }
+  nav.toc h1{font-size:18px;margin:0 0 8px;color:var(--duck-deep)}
+  nav.toc small{display:block;color:var(--muted);font-size:11px;margin-bottom:18px}
+  nav.toc ol{list-style:none;padding:0;margin:0;counter-reset:item}
+  nav.toc li{counter-increment:item;margin:6px 0;font-size:14px}
+  nav.toc li::before{content:counter(item,decimal-leading-zero) "  ";color:var(--duck-deep);font-family:var(--mono);font-size:12px}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px dashed transparent}
+  nav.toc a:hover{border-bottom-color:var(--duck-deep);color:var(--duck-deep)}
+  /* Main */
+  main{padding:48px 56px 96px;max-width:880px}
+  h2{font-size:28px;color:var(--pond-deep);border-bottom:3px solid var(--duck);padding-bottom:6px;margin-top:64px}
+  h2:first-of-type{margin-top:0}
+  h3{font-size:20px;color:var(--duck-deep);margin-top:32px}
+  h4{font-size:16px;margin-top:24px;color:var(--pond-deep)}
+  p{margin:12px 0}
+  small{color:var(--muted)}
+  code{font-family:var(--mono);background:#fff1a8;padding:1px 6px;border-radius:4px;font-size:0.92em;color:#4a3a00}
+  pre{
+    background:#1c2024;color:#f5efc7;
+    padding:18px 20px;border-radius:8px;
+    overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.5;
+    border:1px solid #333;
+  }
+  pre.duck{background:var(--paper);color:#3a2e00;border:1px dashed var(--duck-deep)}
+  blockquote{
+    background:#fff1a8;border-left:5px solid var(--duck);
+    padding:12px 18px;margin:18px 0;border-radius:6px;font-style:italic;
+  }
+  blockquote.ceo{background:#dbeefa;border-left-color:var(--pond-deep);font-style:normal}
+  blockquote.ceo strong{color:var(--pond-deep)}
+  .duck-says{
+    background:linear-gradient(135deg,#fff5b8 0%,#fff1a0 100%);
+    border:2px solid var(--duck);border-radius:12px;
+    padding:18px 22px;margin:22px 0;position:relative;
+  }
+  .duck-says::before{
+    content:"鸭鸭说";position:absolute;top:-12px;left:18px;
+    background:var(--duck);color:#3a2e00;font-weight:bold;
+    padding:2px 10px;border-radius:6px;font-size:12px;
+  }
+  .danger{
+    background:#fde0d8;border:2px solid #c44a26;border-radius:8px;
+    padding:14px 18px;margin:18px 0;
+  }
+  .danger::before{content:"小心鸭 ";color:#c44a26;font-weight:bold}
+  table{border-collapse:collapse;margin:18px 0;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+  th{background:#fff1a8;color:#3a2e00}
+  tr:nth-child(even) td{background:#fffcdd}
+  .three-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+  .three-cards .card{
+    background:#fff;border:2px solid var(--line);border-radius:10px;
+    padding:16px;font-size:14px;
+  }
+  .three-cards .card h4{margin-top:0;border-bottom:2px solid var(--duck);padding-bottom:6px}
+  .pill{display:inline-block;background:var(--pond);color:#fff;padding:2px 10px;border-radius:999px;font-size:11px;margin-right:4px}
+  hr{border:0;border-top:2px dashed var(--line);margin:48px 0}
+  @media(max-width:780px){
+    body{grid-template-columns:1fr}
+    nav.toc{position:relative;height:auto;border-right:0;border-bottom:2px solid var(--line)}
+    main{padding:32px 24px}
+    .three-cards{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <h1>TeamAgent 小册子</h1>
+  <small>给 CEO 鸭鸭看的版本 · 不会有一行代码看不懂</small>
+  <ol>
+    <li><a href="#hello">鸭鸭你好</a></li>
+    <li><a href="#why">为什么要做这个</a></li>
+    <li><a href="#story">八步小剧场</a></li>
+    <li><a href="#ducks">三只小鸭子</a></li>
+    <li><a href="#memory">记忆鸭</a></li>
+    <li><a href="#proof">证据鸭</a></li>
+    <li><a href="#sync">同步鸭</a></li>
+    <li><a href="#judge">裁判鸭</a></li>
+    <li><a href="#install">怎么装上去</a></li>
+    <li><a href="#faq">CEO 灵魂三问</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="hello">
+<pre class="duck">
+            __
+        ___( o)&gt;     呷呷~
+        \ &lt;_. )    我是 TeamAgent
+         `---'     一只会帮 Claude Code 记错误的鸭子
+</pre>
+
+<h2>1 · 鸭鸭你好</h2>
+
+<p>CEO 鸭鸭，先深呼吸。这本册子不会让你看见任何 <code>npm install</code>、不会让你看见任何花括号。你只需要看故事、看流程、看几张图就行。</p>
+
+<div class="duck-says">
+  <strong>一句话版本：</strong>
+  <br/>
+  我们做了一个叫 <strong>TeamAgent</strong> 的小工具，能让 Claude Code（员工 A 在用的那个 AI 编程助手）<strong>记住人犯过的错</strong>，下一次<strong>员工 B 同样的错就被自动拦住</strong>，然后<strong>给你（CEO）一份证据报告</strong>，证明这次没白拦。
+</div>
+
+<p>简单说：</p>
+<ul>
+  <li><strong>员工教过 AI 一次</strong>的话，AI 就记住了。</li>
+  <li><strong>下次另一个员工碰到 AI</strong>，AI 不会再交同一份错的作业。</li>
+  <li><strong>你随时能看证据</strong>，知道这次拦住的是真实的重复错误，而不是工具自己吹牛。</li>
+</ul>
+
+<p>这事情值钱在哪里？小公司一个月里有 <strong>30% 的 PR 时间</strong>，是在重复纠正 AI 之前已经被纠正过的同类错误。TeamAgent 把这 30% 直接砍掉。</p>
+</section>
+
+<hr/>
+
+<section id="why">
+<h2>2 · 为什么要做这个</h2>
+
+<p>鸭鸭你想象一下这个场景：</p>
+
+<pre class="duck">
+  +-----------+        "用 dayjs，不要用 moment！"
+  | 员工 Alice |  -------------------------------+
+  +-----------+                                   |
+        |  说完气得喝了口水                        |
+        v                                          v
+  +------------+                            +------------+
+  | Claude     |  "好的好的，下次记住"        | Claude (3天后) |
+  | (周一)     |                            | (周四，新会话)|
+  +------------+                            +------------+
+        |                                          |
+        |                                          v
+        |                                  "好的我用 moment.js"
+        |                                          |
+        v                                          v
+                                         +------------+
+                                         | 员工 Bob   |  "??????"
+                                         +------------+
+</pre>
+
+<p>问题在于：Claude Code 每开一个新会话，<strong>它就把记忆清空了</strong>。Alice 教过它一次「不要用 moment」，三天后 Bob 开新会话，AI 又交了同一份错作业。</p>
+
+<blockquote class="ceo"><strong>CEO 视角：</strong>这就是一笔看不见的浪费。错误本身不大，但 <strong>3 个员工 × 每周 5 次 × 每次 15 分钟来回</strong>，一个月就是 15 小时白送。</blockquote>
+
+<p>TeamAgent 干的事很朴素，就 3 件：</p>
+
+<ol>
+  <li><strong>抓住 Alice 的纠正</strong> — Alice 说「不要用 X，用 Y」的时候，悄悄存下来。</li>
+  <li><strong>拦住 Bob 的重复</strong> — Bob 三天后让 Claude 装 moment，TeamAgent 在 Claude 真的去装之前喊停，把 Alice 的原话翻出来给 Bob 看。</li>
+  <li><strong>把证据汇报给你</strong> — 自动生成一张「上次 Alice 教过这个 / 这次 Bob 差点踩坑 / 我拦住了」的网页，给你一目了然。</li>
+</ol>
+</section>
+
+<hr/>
+
+<section id="story">
+<h2>3 · 八步小剧场</h2>
+
+<p>这一节我用八格漫画的形式讲完整个故事。鸭鸭你看着画面读就行。</p>
+
+<pre class="duck">
+[第 1 格]                          [第 2 格]
++--------------------+             +--------------------+
+| Alice 跟 Claude 说： |             | Claude：「好的明白！」|
+| 「装 moment 吧」    |             | 准备装 moment       |
++--------------------+             +--------------------+
+        |                                 |
+        v                                 v
+[第 3 格]                          [第 4 格]
++--------------------+             +--------------------+
+| Alice 反应过来：     |             | TeamAgent (记忆鸭) |
+| 「不要！用 dayjs！」 |   --抓到--&gt;  | 默默记下：           |
+|                    |             |  规则卡片 #1        |
++--------------------+             +--------------------+
+                                          |
+                                          v
+[第 5 格]                          [第 6 格]
++--------------------+             +--------------------+
+| 三天后…            |             | Bob：               |
+| Bob 开新会话        |             | 「Claude，装 moment」|
++--------------------+             +--------------------+
+        |                                 |
+        v                                 v
+[第 7 格]                          [第 8 格]
++--------------------+             +--------------------+
+| TeamAgent 在 Claude |             | CEO 鸭鸭收到报告：  |
+| 真的执行前喊停：     |             | 「上次 Alice 教过， |
+| 「Alice 三天前      |  ---&gt;       |  这次 Bob 想再犯，  |
+|  说过用 dayjs」     |             |  我把他拦住了」     |
++--------------------+             +--------------------+
+</pre>
+
+<div class="duck-says">
+  鸭鸭画外音：这八步里只有第 4、第 7、第 8 是我们造的。第 1、2、3、5、6 都是 Claude Code 本来就在做的事。我们只是<strong>在两个对的时间点插了一只小鸭子</strong>。
+</div>
+
+<blockquote>「Previous Claude Code made this mistake. New Claude Code tried to repeat it. TeamAgent blocked it.」<br/><small>— 这是给 CEO 看的一句话广告语。</small></blockquote>
+</section>
+
+<hr/>
+
+<section id="ducks">
+<h2>4 · 三只小鸭子</h2>
+
+<p>TeamAgent 不是一只鸭，是一队 <strong>三只</strong> 协作的鸭，各管一摊。</p>
+
+<div class="three-cards">
+  <div class="card">
+    <h4>记忆鸭<br/><small>teamagent-memory</small></h4>
+    <pre class="duck" style="font-size:11px">
+   __
+  &lt;(o )___
+   ( ._&gt; /
+    `---'
+   抓 / 存 / 拦
+    </pre>
+    <p>抓住「不要 X，用 Y」的纠正，存成<strong>规则卡片</strong>。下一次有人想再犯同样的错，它在最后一秒喊停。</p>
+    <p><span class="pill">捕获</span><span class="pill">阻断</span><span class="pill">提醒</span></p>
+  </div>
+
+  <div class="card">
+    <h4>证据鸭<br/><small>teamagent-proof-console</small></h4>
+    <pre class="duck" style="font-size:11px">
+       __
+   ___( o)&gt;
+   \ &lt;_. )    .png
+    `---'     .html
+   生 / 验 / 给老板看
+    </pre>
+    <p>把记忆鸭存的卡片、拦住的事件、前后对比，自动生成一张<strong>给 CEO 看的网页</strong>。一张图就说清楚：「这次拦住的是真东西」。</p>
+    <p><span class="pill">报告</span><span class="pill">审计</span><span class="pill">CEO 视角</span></p>
+  </div>
+
+  <div class="card">
+    <h4>同步鸭<br/><small>teamagent-team-sync</small></h4>
+    <pre class="duck" style="font-size:11px">
+       __
+      (o )&gt;___
+       ( ._&gt; \\
+        `---'
+   推 / 拉 / 调解纠纷
+    </pre>
+    <p>Alice 在她的电脑上记下的规则，怎么传给 Bob、Charlie、Diana 的电脑？同步鸭管这事。两边规则打架时，它不会自己做决定，而是<strong>把冲突摆出来等人裁判</strong>。</p>
+    <p><span class="pill">同步</span><span class="pill">冲突调解</span><span class="pill">推广</span></p>
+  </div>
+</div>
+
+<p>它们三个合起来，加上一个第四方<strong>裁判鸭</strong>（不是 plugin，是个独立的检查程序），就组成了完整的 TeamAgent。</p>
+</section>
+
+<hr/>
+
+<section id="memory">
+<h2>5 · 记忆鸭 · teamagent-memory</h2>
+
+<p>这是三只鸭里最重要的那一只。其它两只都是围着它转的。</p>
+
+<h3>5.1 它在什么时候动手？</h3>
+
+<p>Claude Code 在工作的时候，会经过几个固定的「门」。记忆鸭就守在三道门后：</p>
+
+<table>
+  <thead><tr><th>门</th><th>什么时候触发</th><th>记忆鸭干什么</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Stop 门</strong></td><td>Claude 给完一轮回答，准备闭嘴时</td><td>翻最近 40 条聊天记录，找有没有「不要 X，用 Y」这种纠正话；找到了就存成规则卡片</td></tr>
+    <tr><td><strong>PreToolUse 门</strong></td><td>Claude 想真的去敲 Bash 命令时（装包、改文件之类）</td><td>对着规则卡片库扫一眼，命中了就喊停，把卡片里的原文还给 Claude 看</td></tr>
+    <tr><td><strong>UserPromptSubmit 门</strong></td><td>用户刚按下回车，但 Claude 还没开口</td><td>看用户句子里有没有以前犯过的关键词；有，就悄悄给 Claude 塞个备忘：「兄弟，上次这件事你被骂过」</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 一张规则卡片长什么样？</h3>
+
+<pre>{
+  "id":         "rule-2026-05-13-moment-dayjs",
+  "trigger":    { "tool": "Bash", "pattern": "npm install moment" },
+  "wrong":      "Adopting moment.js as a new dependency",
+  "correct":    "Use dayjs",
+  "why":        "moment is in maintenance mode",
+  "confidence": 1,
+  "captured_at":"2026-05-13T00:00:00Z"
+}</pre>
+
+<p>简单说，<strong>每张卡片 = 一句教训</strong>。它带：</p>
+<ul>
+  <li><strong>什么动作</strong>会触发（trigger）</li>
+  <li><strong>错在哪里</strong>（wrong）</li>
+  <li><strong>正确应该是什么</strong>（correct）</li>
+  <li><strong>为什么这样</strong>（why）</li>
+  <li><strong>信心度</strong>（confidence，被命中过几次）</li>
+</ul>
+
+<div class="duck-says">
+  鸭鸭说：你可以把规则卡片想成「钉在墙上的便签纸」。墙是公司，便签是规矩。AI 每动一次手，都先抬头看看墙。
+</div>
+
+<h3>5.3 它不会犯什么错？</h3>
+
+<ul>
+  <li><strong>不会乱拦</strong>：只有 Bash 命令真的命中卡片里的 pattern 才会拦。装 dayjs 不会被拦，装别的也不会。</li>
+  <li><strong>不会重复存</strong>：Alice 教了一次，再教一次同样的话，卡片不会变成两张，只会把 confidence 从 1 加到 2。</li>
+  <li><strong>不会卡死会话</strong>：如果记忆鸭自己出问题（比如卡片文件乱了），它就<strong>默默退出</strong>，不会让 Claude 用不了。Fail open 不是 fail close。</li>
+</ul>
+</section>
+
+<hr/>
+
+<section id="proof">
+<h2>6 · 证据鸭 · teamagent-proof-console</h2>
+
+<p>记忆鸭只管抓和拦。证据鸭只管<strong>把这事翻译给 CEO 看</strong>。</p>
+
+<h3>6.1 它产出什么？</h3>
+
+<p>三个东西，都在 <code>evidence/</code> 这个文件夹里：</p>
+
+<table>
+  <thead><tr><th>文件</th><th>给谁看</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>rule-card.json</code></td><td>合规 / 审计</td><td>那张被命中的规则卡片原件</td></tr>
+    <tr><td><code>ceo-summary.html</code></td><td>CEO 鸭鸭</td><td>一页网页，含八步故事 + 规则卡片 + before/after 对比</td></tr>
+    <tr><td><code>ceo-demo.mp4</code></td><td>大会演讲</td><td>不超过 90 秒、不低于 720p 的演示录屏（可选）</td></tr>
+  </tbody>
+</table>
+
+<h3>6.2 那张 CEO 网页里必须含什么？</h3>
+
+<p>有四句话是<strong>硬合同</strong>，缺一不可（裁判鸭会抓）：</p>
+
+<ol>
+  <li>「Previous Claude Code made this mistake」（上一只 Claude 犯过这个错）</li>
+  <li>「TeamAgent blocked it」（TeamAgent 把它拦下来了）</li>
+  <li>「rule-card」（这就是那张卡片）</li>
+  <li>「before/after」（前后对比）</li>
+</ol>
+
+<p>而且网页大小至少 2KB，确保不是空壳。</p>
+
+<h3>6.3 一条命令就生成</h3>
+
+<p>用户（或者你 CEO 鸭鸭自己）只要在 Claude Code 里敲：</p>
+
+<pre>/teamagent-proof-console:proof</pre>
+
+<p>证据鸭就会按顺序：</p>
+
+<ol>
+  <li>挑出最近一次被拦住的事件</li>
+  <li>把那张规则卡片渲染成 HTML</li>
+  <li>核对四锚点是否齐全</li>
+  <li>把结果写到 <code>evidence/</code></li>
+</ol>
+
+<div class="danger">
+  这一步<strong>不会编故事</strong>。如果记忆鸭里没真发生过的事，证据鸭会拒绝生成，而不是凭空捏造一个好看的报告。CEO 鸭鸭看见的每张证据，背后都有真实的 hook 事件。
+</div>
+</section>
+
+<hr/>
+
+<section id="sync">
+<h2>7 · 同步鸭 · teamagent-team-sync</h2>
+
+<h3>7.1 它要解决什么问题？</h3>
+
+<p>Alice 在她那台 Mac 上教 Claude「不要用 moment」，记忆鸭把卡片存在 Alice 的电脑里。但 Bob 用的是<strong>他自己的电脑</strong>，他电脑里没有这张卡片，记忆鸭<strong>看不见</strong>。这是单兵抓人，没有团队记忆。</p>
+
+<p>同步鸭就是来当那个「公司共享文件柜」的：</p>
+
+<pre class="duck">
+  Alice 电脑                  团队共享文件柜               Bob 电脑
+  +----------+      推       +----------+      拉       +----------+
+  | 记忆鸭 A |  ----------&gt;  | team/    |  ----------&gt;  | 记忆鸭 B |
+  | 卡片库   |               | rules    |               | 卡片库   |
+  +----------+               | .jsonl   |               +----------+
+                             +----------+
+</pre>
+
+<h3>7.2 它什么时候动手？</h3>
+
+<table>
+  <thead><tr><th>时机</th><th>做什么</th></tr></thead>
+  <tbody>
+    <tr><td><strong>新会话开始</strong>（SessionStart）</td><td>从团队文件柜拉新卡片；本地没有的就拷过来</td></tr>
+    <tr><td><strong>用户说要分享</strong>（UserPromptSubmit）</td><td>识别到「publish this rule / 分享给团队」这类话，提醒 Claude 调用发布技能</td></tr>
+  </tbody>
+</table>
+
+<h3>7.3 两人规则不一样怎么办？</h3>
+
+<p>Alice 说「不要用 moment，用 dayjs」。<br/>
+Bob 说「不要用 moment，用 date-fns」。<br/>
+两张卡片<strong>触发条件一样，正确答案不同</strong>。同步鸭不会<strong>替你做决定</strong>，它把冲突写到一个叫 <code>conflicts.jsonl</code> 的小本子里，下次会话开始时给 Claude 一个提醒：</p>
+
+<blockquote>「兄弟，团队里这条规矩有两个版本，你跑之前先问问人类决定要哪个。」</blockquote>
+
+<p>裁决权回到人手里。鸭鸭可以选：</p>
+
+<ol>
+  <li><strong>保留本地</strong>（Alice 的版本不变）</li>
+  <li><strong>接受团队</strong>（用 Bob 的版本覆盖）</li>
+  <li><strong>合并</strong>（两个都不要 moment，候选答案 dayjs/date-fns）</li>
+  <li><strong>两个都丢</strong>（这条规矩本来就不该存在）</li>
+</ol>
+
+<div class="duck-says">
+  鸭鸭说：这个设计来自一条铁律 —— <strong>分布式系统里同步可以自动，决策必须人来</strong>。同步鸭做搬运工，不做法官。
+</div>
+</section>
+
+<hr/>
+
+<section id="judge">
+<h2>8 · 裁判鸭 · 第三方机械裁判</h2>
+
+<h3>8.1 为什么要有它？</h3>
+
+<blockquote class="ceo">
+  <strong>CEO 灵魂提问：</strong>「你说这工具好用，但你说了不算 —— 你怎么证明？」
+</blockquote>
+
+<p>这是 TeamAgent 设计里最重要的一节。CEO 鸭鸭你听好：</p>
+
+<div class="duck-says">
+  <strong>不要让代码自己评价自己。</strong><br/>
+  任何「我们做得多好」的话，都不能由做这件事的代码自己说。要请一个<strong>不沾边的第三方</strong>看证据。
+</div>
+
+<p>这一原则在我们的体系里长成了一只裁判鸭。它的工作流程是：</p>
+
+<pre class="duck">
+         记忆鸭           证据鸭           同步鸭
+            \              |              /
+             \             |             /
+              \            v            /
+               +-------------------------+
+               |   裁判鸭 (judge.sh)     |
+               | 1. 跑三个固定测试探针    |
+               | 2. 把结果写成 judge.json|
+               | 3. 不做总结，只做事实   |
+               +-------------------------+
+                          |
+                          v
+               +-------------------------+
+               | 另一只小 LLM (空白脑)   |
+               | 只读 judge.json        |
+               | 输出 PASS / FAIL       |
+               +-------------------------+
+                          |
+                          v
+                    CEO 鸭鸭看结果
+</pre>
+
+<h3>8.2 三只探针测的是什么？</h3>
+
+<table>
+  <thead><tr><th>探针</th><th>验什么</th><th>怎么验</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>stream-json</code></td>
+      <td>Claude 本身真在产事件流，证据不是伪造的</td>
+      <td>跑一次 <code>claudefast --output-format stream-json -p "ping"</code>，看是否有 JSON 事件输出</td>
+    </tr>
+    <tr>
+      <td><code>ab-plugin-dir</code></td>
+      <td>记忆鸭真的有因果效应：装了它会拦，不装就不拦</td>
+      <td>跑三轨：<br/>A 不装鸭子 + 坏指令 → 不该拦<br/>B 装鸭子 + 坏指令 → 应该拦<br/>C 装鸭子 + 良性指令 → 不该误伤</td>
+    </tr>
+    <tr>
+      <td><code>file-checks</code></td>
+      <td>CEO 报告四锚点齐 / 卡片 schema 合规 / 代码语法对 / git 已提交</td>
+      <td>用 <code>jq</code>、<code>grep</code>、<code>wc -c</code>、<code>node --check</code>、<code>git status</code> 五件套</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>8.3 裁判鸭也不能自己说赢</h3>
+
+<p>裁判鸭把所有事实写到 <code>judge.json</code> 后，<strong>不下结论</strong>。结论交给一个<strong>另一只</strong>开着空白脑（<code>--plugin-dir /tmp/empty</code>）的小 LLM，让它只能看 <code>judge.json</code> 上的字段，回答 PASS 或 FAIL。</p>
+
+<p>这只「空白脑 LLM」连记忆鸭、证据鸭、同步鸭都看不见 —— 它没办法被忽悠。</p>
+
+<div class="duck-says">
+  鸭鸭说：这就像审计师不能用自家公司开的 office 来写审计报告。证据要留痕，工具要无关，结论要外人下。
+</div>
+</section>
+
+<hr/>
+
+<section id="install">
+<h2>9 · 怎么把鸭子装进 Claude Code</h2>
+
+<p>不用写代码。三条命令搞定。</p>
+
+<h3>9.1 让 Claude Code 知道我们这个市场</h3>
+
+<pre>/plugin marketplace add ./teamagent-marketplace</pre>
+
+<p>（如果是远端 GitHub 仓库，就改成 <code>git@github.com:libz-renlab-ai/TeamBrain</code>。）</p>
+
+<h3>9.2 装其中一只鸭子（按需要）</h3>
+
+<pre>/plugin install teamagent-memory@teamagent-marketplace
+/plugin install teamagent-proof-console@teamagent-marketplace
+/plugin install teamagent-team-sync@teamagent-marketplace</pre>
+
+<p>三只都装也行，只装记忆鸭也行。一只都不装也行（但那样就没东西了）。</p>
+
+<h3>9.3 让裁判鸭跑一次自检</h3>
+
+<pre>cd teamagent-marketplace
+bash bin/judge.sh
+bash bin/judge-verdict.sh</pre>
+
+<p>看见两个 <code>PASS</code> 就行。</p>
+
+<h3>9.4 给 CEO 鸭鸭看的演示</h3>
+
+<p>开两个 Claude Code 窗口：</p>
+<ol>
+  <li>第一个窗口：<strong>装鸭子</strong>，让 Alice 角色跟 Claude 说「不要用 moment，用 dayjs」。然后看 <code>~/.teamagent/rules.jsonl</code>，会出现一张卡片。</li>
+  <li>关第一个窗口，开第二个：<strong>装鸭子</strong>，让 Bob 角色跟 Claude 说「装一下 moment」。Claude 在最后一秒会喊停，并把 Alice 那句话翻出来。</li>
+  <li>再敲 <code>/teamagent-proof-console:proof</code>，那张 CEO 网页就生成在 <code>evidence/ceo-summary.html</code>。</li>
+</ol>
+
+<div class="duck-says">
+  鸭鸭说：这套演示三分钟内可以走完，<strong>视频录屏不超过 90 秒</strong>。这就是裁判鸭里 <code>ffprobe</code> 那一条的来源 —— 我们要求 CEO 演示越短越好。
+</div>
+</section>
+
+<hr/>
+
+<section id="faq">
+<h2>10 · CEO 灵魂三问</h2>
+
+<h3>问题一：这玩意儿会不会拦错好东西？</h3>
+
+<p>会，理论上。但我们做了三层防护：</p>
+<ol>
+  <li>规则<strong>只匹配 Bash 命令</strong>，不会拦 Read / Write / Edit 之类的常规操作。</li>
+  <li>规则的 trigger pattern <strong>有长度上限 512 字符</strong>，防止有人塞一条「拦一切」的恶意正则进来。</li>
+  <li>裁判鸭的 C 轨专门测「良性指令在装了鸭子的情况下是不是还能跑」。装新规则前，C 轨必须依然过。</li>
+</ol>
+
+<h3>问题二：如果规则错了 / 过时了，怎么办？</h3>
+
+<p>三条路：</p>
+<ul>
+  <li>用 <code>teamagent</code> 命令行的 <code>clear</code> 子命令清空（有 <code>--yes</code> 二次确认）。</li>
+  <li>手工删 <code>~/.teamagent/rules.jsonl</code> 里那一行。</li>
+  <li>或者下一次会话直接跟 Claude 说「moment 现在可以用了」，让记忆鸭再抓一次「相反」的纠正，覆盖前一张卡片。</li>
+</ul>
+
+<h3>问题三：商业模式是什么？</h3>
+
+<p>三种可能（CEO 鸭鸭你拍板）：</p>
+
+<table>
+  <thead><tr><th>模式</th><th>对谁卖</th><th>核心价值</th></tr></thead>
+  <tbody>
+    <tr><td>免费 + 开源</td><td>个人 / 小团队</td><td>引流到团队版</td></tr>
+    <tr><td>团队订阅</td><td>5 - 50 人开发团队</td><td>同步鸭的中央服务 + CEO Dashboard</td></tr>
+    <tr><td>企业版</td><td>大公司 / 合规要求高</td><td>审计轨迹、SAML、自托管裁判鸭</td></tr>
+  </tbody>
+</table>
+
+<div class="duck-says">
+  鸭鸭压轴说：这三只鸭子加一只裁判，本质上做的是<strong>「把 AI 团队的口头规矩，变成可执行、可证明、可同步的卡片」</strong>。把口头规矩固化成机械合同，这是过去 5 年所有 AI 工程提效工具里，最被低估的那条线。
+</div>
+
+<pre class="duck">
+   呷呷~ 看完了
+            __
+        ___( o)&gt;          鸭鸭祝
+        \ &lt;_. )         你的 AI 团队
+         `---'          少犯重复错
+                        多出真证据
+</pre>
+
+</section>
+
+</main>
+
+</body>
+</html>
