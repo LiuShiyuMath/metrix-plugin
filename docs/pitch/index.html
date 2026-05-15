@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<title>TeamAgent — 捕捉一次纠正，封锁所有重复</title>
+<meta name="description" content="TeamAgent — 一次纠正进，全队不再犯。">
+<meta property="og:title" content="TeamAgent — 捕捉一次纠正，封锁所有重复">
+<meta property="og:description" content="TeamAgent — 一次纠正进，全队不再犯。">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%23E65100%22%2F%3E%3Ctext%20x%3D%2216%22%20y%3D%2222%22%20font-family%3D%22Georgia%2Cserif%22%20font-weight%3D%22800%22%20font-style%3D%22italic%22%20font-size%3D%2220%22%20fill%3D%22%23fff%22%20text-anchor%3D%22middle%22%3ET%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0A0A0A;
+  --fg: #F2EFE7;
+  --paper: #F8F6F0;
+  --accent: #E65100;
+  --accent-soft: color-mix(in srgb, #E65100 20%, transparent);
+  --accent-dim: color-mix(in srgb, #E65100 40%, transparent);
+  --rule: color-mix(in srgb, #F2EFE7 16%, transparent);
+  --muted: color-mix(in srgb, #F2EFE7 55%, transparent);
+  --display: 'Fraunces', 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --body: 'Geist', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  --mono: 'Geist Mono', 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', monospace;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --max-w: 1240px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--ink);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: clamp(0.95rem, 1.05vw, 1.05rem);
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Subtle film grain — gives "printed" feel rather than digital screen */
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-blend-mode: overlay;
+}
+
+a { color: inherit; text-decoration: none; }
+img, video, svg { max-width: 100%; display: block; }
+
+/* ── Typography primitives ──────────────────────────────────────────────── */
+.pk-display { font-family: var(--display); font-weight: 600; letter-spacing: -0.025em; line-height: 1.02; }
+.pk-emph {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "SOFT" 50;
+  color: var(--accent);
+  /* Subtle text-shadow so italic accent feels printed-into-paper */
+  text-shadow: 0 0 32px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.pk-mono {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pk-section-num {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.pk-wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--gutter); }
+.pk-section { padding: clamp(4rem, 10vw, 8rem) 0; position: relative; }
+.pk-section + .pk-section { border-top: 1px solid var(--rule); }
+
+/* Decorative side rule on every section header (newspaper convention) */
+.pk-section-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  max-width: 36rem;
+  margin: 0 auto clamp(2rem, 5vw, 4rem);
+  text-align: center;
+}
+.pk-section-head h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  line-height: 1.02;
+  margin: 0;
+}
+.pk-section-head .lead { color: var(--muted); font-size: 1.05rem; max-width: 32rem; margin: 0 auto; }
+
+/* ── Sticky masthead nav ────────────────────────────────────────────────── */
+.pk-mast {
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: color-mix(in srgb, var(--ink) 78%, transparent);
+  border-bottom: 1px solid var(--rule);
+}
+.pk-mast-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 0;
+}
+.pk-wordmark {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.pk-wordmark::before {
+  content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+.pk-mast-cta {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  padding: 0.55rem 1.05rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: transform 0.18s var(--ease);
+}
+.pk-mast-cta:hover { transform: translateY(-1px); }
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+.pk-hero { padding: clamp(5rem, 14vw, 11rem) 0 clamp(3rem, 8vw, 6rem); }
+.pk-hero-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.75rem; position: relative; }
+.pk-hero-wrap::before {
+  content: ''; position: absolute; inset: -20% -10% 20%; z-index: -1;
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, var(--accent-soft) 0%, transparent 65%);
+  filter: blur(50px);
+  pointer-events: none;
+}
+.pk-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  border: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pk-eyebrow-dot {
+  width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-dim);
+  animation: pulse 2.4s var(--ease) infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 var(--accent-dim); }
+  100% { box-shadow: 0 0 0 8px transparent; }
+}
+.pk-hero h1 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(2.75rem, 11vw, 8.5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+  max-width: 14ch;
+  margin: 0;
+}
+.pk-hero h1 .pk-emph {
+  font-size: 1.1em; /* italic word slightly larger for editorial emphasis */
+}
+.pk-hero-tagline {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2.4vw, 1.875rem);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  max-width: 34rem;
+  color: var(--muted);
+}
+.pk-hero-pitch {
+  font-size: 1rem;
+  max-width: 30rem;
+  color: var(--muted);
+}
+.pk-hero-actions { display: flex; gap: 0.875rem; flex-wrap: wrap; justify-content: center; }
+.pk-btn {
+  display: inline-flex; align-items: center; gap: 0.5em;
+  padding: 0.95rem 1.875rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.16s var(--ease), background 0.16s var(--ease), border-color 0.16s var(--ease);
+  cursor: pointer; border: 0;
+  font-family: var(--body);
+}
+.pk-btn-primary {
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.pk-btn-primary:hover { transform: translateY(-2px); }
+.pk-btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--rule);
+}
+.pk-btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Hero scroll cue */
+.pk-scroll-cue {
+  margin-top: 2rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: inline-flex; flex-direction: column; align-items: center; gap: 0.5rem;
+}
+.pk-scroll-cue::after {
+  content: ''; width: 1px; height: 28px;
+  background: linear-gradient(to bottom, var(--rule), transparent);
+  animation: scrollDrop 2s var(--ease) infinite;
+}
+@keyframes scrollDrop {
+  0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4; }
+  50% { transform: scaleY(0.4); opacity: 0.8; }
+}
+
+/* ── Marquee ────────────────────────────────────────────────────────────── */
+.pk-marquee {
+  padding: 1.75rem 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+}
+.pk-marquee-track {
+  display: flex; gap: 4rem;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.pk-marquee-item {
+  font-family: var(--display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 1.5rem;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  opacity: 0.45;
+  transition: opacity 0.2s var(--ease), color 0.2s var(--ease);
+}
+.pk-marquee-item:hover { opacity: 1; color: var(--accent); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Stats ribbon ───────────────────────────────────────────────────────── */
+.pk-stats {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+}
+.pk-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  column-rule: 1px solid var(--rule);
+}
+@media (min-width: 800px) { .pk-stats-grid { grid-template-columns: repeat(4, 1fr); } }
+.pk-stat { display: flex; flex-direction: column; gap: 0.4rem; }
+.pk-stat-value {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums oldstyle-nums;
+}
+.pk-stat-delta {
+  font-family: var(--mono);
+  font-size: 0.825rem;
+  color: #4ade80;
+  letter-spacing: 0.04em;
+}
+.pk-stat-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* ── Problem/Solution: editorial pull-quote split ───────────────────────── */
+.pk-ps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+}
+@media (min-width: 800px) { .pk-ps { grid-template-columns: 5fr 7fr; align-items: end; } }
+.pk-ps-block { position: relative; }
+.pk-ps-text {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.pk-ps-solution .pk-ps-text {
+  font-weight: 600;
+  font-size: clamp(1.75rem, 4vw, 2.875rem);
+}
+.pk-ps-solution .pk-ps-text .pk-emph { font-size: 1.05em; }
+
+/* ── Bento features ─────────────────────────────────────────────────────── */
+.pk-bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 760px) {
+  .pk-bento { grid-template-columns: repeat(6, 1fr); grid-auto-rows: minmax(200px, auto); }
+  .pk-bento > .pk-card:nth-child(1) { grid-column: span 3; grid-row: span 2; }
+  .pk-bento > .pk-card:nth-child(2) { grid-column: span 3; }
+  .pk-bento > .pk-card:nth-child(3) { grid-column: span 3; }
+  .pk-bento > .pk-card:nth-child(4) { grid-column: span 2; }
+  .pk-bento > .pk-card:nth-child(5) { grid-column: span 2; }
+  .pk-bento > .pk-card:nth-child(6) { grid-column: span 2; }
+}
+.pk-card {
+  position: relative;
+  padding: clamp(1.5rem, 2.4vw, 2.25rem);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
+  display: flex; flex-direction: column;
+}
+.pk-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-soft) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+  pointer-events: none;
+}
+.pk-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-dim);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.pk-card:hover::after { opacity: 1; }
+.pk-card-icon {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 0.65rem;
+  background: var(--accent-soft);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.375rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-family: var(--display); font-weight: 700;
+}
+.pk-card h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 1.8vw, 1.625rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+  line-height: 1.15;
+}
+.pk-card p { color: var(--muted); font-size: 0.975rem; line-height: 1.55; margin: 0; }
+
+/* ── Demo ───────────────────────────────────────────────────────────────── */
+.pk-demo-frame {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: #000;
+  box-shadow:
+    0 30px 80px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 0 0 1px var(--rule),
+    inset 0 0 0 1px color-mix(in srgb, var(--fg) 5%, transparent);
+  max-width: 64rem;
+  margin: 0 auto;
+}
+.pk-demo-frame video { width: 100%; display: block; }
+.pk-demo-caption {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 1.25rem;
+}
+
+/* ── Pricing — paper cards ──────────────────────────────────────────────── */
+.pk-pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: 62rem;
+  margin: 0 auto;
+}
+@media (min-width: 760px) {
+  .pk-pricing-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+.pk-price {
+  position: relative;
+  padding: 2rem 1.75rem 2.25rem;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  border: 1px solid var(--rule);
+  display: flex; flex-direction: column;
+}
+.pk-price.featured {
+  background: linear-gradient(180deg, var(--accent-soft) 0%, transparent 50%);
+  border-color: var(--accent-dim);
+  transform: scale(1.025);
+  z-index: 1;
+}
+.pk-price-badge {
+  position: absolute; top: -0.7rem; left: 50%; transform: translateX(-50%);
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--accent); color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pk-price-tier {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pk-price-amount {
+  margin: 0.875rem 0 1.25rem;
+  display: flex; align-items: baseline; gap: 0.4rem;
+}
+.pk-price-amount .v {
+  font-family: var(--display); font-weight: 600;
+  font-size: 3rem; letter-spacing: -0.04em; line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums oldstyle-nums;
+}
+.pk-price-amount .i { color: var(--muted); font-size: 0.875rem; }
+.pk-price-features { display: flex; flex-direction: column; gap: 0.625rem; }
+.pk-price-features li {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  list-style: none; padding: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.pk-price-features li::before {
+  content: '✓';
+  color: var(--accent);
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+
+/* ── Testimonials — pull quotes ─────────────────────────────────────────── */
+.pk-testis {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 760px) { .pk-testis { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+.pk-testi {
+  padding: 2rem 1.75rem;
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+  border-radius: 1.25rem;
+  border: 1px solid var(--rule);
+  position: relative;
+}
+.pk-testi::before {
+  content: '"';
+  position: absolute; top: -0.5rem; left: 1.25rem;
+  font-family: var(--display); font-weight: 600; font-style: italic;
+  font-size: 5rem; color: var(--accent-dim); line-height: 1;
+}
+.pk-testi blockquote {
+  margin: 0; padding-top: 1.25rem;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+}
+.pk-testi-foot {
+  margin-top: 1.5rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.pk-testi-avatar {
+  width: 2.25rem; height: 2.25rem;
+  border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  font-family: var(--display); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pk-testi-meta .name { font-weight: 600; font-size: 0.9rem; }
+.pk-testi-meta .role { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--muted); margin-top: 0.15rem; }
+
+/* ── Team ───────────────────────────────────────────────────────────────── */
+.pk-team {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  max-width: 56rem; margin: 0 auto;
+}
+@media (min-width: 760px) {
+  .pk-team { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+.pk-member { text-align: center; }
+.pk-member-avatar {
+  width: 5rem; height: 5rem;
+  border-radius: 50%;
+  margin: 0 auto 0.75rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-weight: 700; font-size: 2rem;
+}
+.pk-member-name { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+.pk-member-role { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-top: 0.25rem; }
+.pk-member-bio { font-size: 0.825rem; color: var(--muted); margin-top: 0.5rem; }
+
+/* ── FAQ — magazine reader letters ──────────────────────────────────────── */
+.pk-faq { max-width: 44rem; margin: 0 auto; }
+.pk-faq-item {
+  border-top: 1px solid var(--rule);
+  padding: 1.25rem 0;
+}
+.pk-faq-item:last-child { border-bottom: 1px solid var(--rule); }
+.pk-faq-q {
+  list-style: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  cursor: pointer;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 1.1rem;
+  letter-spacing: -0.005em;
+  padding: 0;
+}
+.pk-faq-q::-webkit-details-marker { display: none; }
+.pk-faq-q::after {
+  content: '+';
+  font-family: var(--mono);
+  color: var(--accent);
+  font-size: 1.5rem;
+  transition: transform 0.25s var(--ease);
+  flex-shrink: 0;
+}
+.pk-faq-item[open] .pk-faq-q::after { content: '−'; transform: rotate(180deg); }
+.pk-faq-a {
+  padding-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.975rem;
+  line-height: 1.6;
+}
+
+/* ── Final CTA ──────────────────────────────────────────────────────────── */
+.pk-cta {
+  position: relative;
+  padding: clamp(5rem, 12vw, 9rem) 0;
+  overflow: hidden;
+  text-align: center;
+}
+.pk-cta::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, var(--accent-soft) 0%, transparent 70%);
+  filter: blur(40px); z-index: 0;
+}
+.pk-cta-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+.pk-cta h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 9vw, 6.5rem);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  max-width: 16ch;
+  margin: 0;
+}
+.pk-cta-tag {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.05rem, 1.75vw, 1.375rem);
+  color: var(--muted);
+  max-width: 30rem;
+  line-height: 1.4;
+}
+
+/* ── Footer — masthead ──────────────────────────────────────────────────── */
+.pk-foot {
+  border-top: 1px solid var(--rule);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 2rem;
+}
+.pk-foot-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.25rem;
+  margin-bottom: 2.5rem;
+}
+@media (min-width: 760px) {
+  .pk-foot-grid { grid-template-columns: 2fr 1fr 1fr 1.6fr; gap: 3rem; }
+}
+.pk-foot-brand { font-family: var(--display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+.pk-foot-blurb { font-size: 0.875rem; color: var(--muted); max-width: 22rem; line-height: 1.55; }
+.pk-foot-col h4 {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); font-weight: 500;
+  margin: 0 0 0.875rem;
+}
+.pk-foot-col a {
+  display: block; padding: 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--fg); opacity: 0.75;
+  transition: color 0.18s var(--ease), opacity 0.18s var(--ease);
+}
+.pk-foot-col a:hover { color: var(--accent); opacity: 1; }
+.pk-foot-bottom {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Scroll-triggered reveals (progressive enhancement) ──────────────────
+   The earlier version used animation: ... both; animation-timeline: view().
+   That broke static rendering (headless screenshots / gstack snapshots) —
+   below-the-fold sections stayed at frame 0 (opacity:0) because they
+   never "entered" a viewport that wasn't being scrolled.
+   Fix: animation-fill-mode: none so the static state is the element's
+   normal style (visible). The scroll-driven animation still plays during
+   genuine user scroll. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pk-section > .pk-wrap > * {
+      animation: pkReveal 0.9s var(--ease) none;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
+    }
+  }
+  @keyframes pkReveal {
+    from { opacity: 0.6; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+</style>
+</head>
+<body>
+<header class="pk-mast">
+  <div class="pk-wrap pk-mast-inner">
+    <a href="#" class="pk-wordmark">TeamAgent</a>
+    <a href="https://github.com/LiuShiyuMath/metrix-plugin" class="pk-mast-cta">Install marketplace</a>
+  </div>
+</header>
+
+
+<section class="pk-hero">
+  <div class="pk-wrap pk-hero-wrap">
+    <span class="pk-eyebrow"><span class="pk-eyebrow-dot"></span>Claude Code 插件市场</span>
+    <h1>Team<em class="pk-emph">Agent</em></h1>
+    <p class="pk-hero-tagline">捕捉一次纠正，封锁所有重复</p>
+    <p class="pk-hero-pitch">TeamAgent — 一次纠正进，全队不再犯。</p>
+    <div class="pk-hero-actions">
+        <a class="pk-btn pk-btn-primary" href="https://github.com/LiuShiyuMath/metrix-plugin">Install marketplace →</a>
+        
+      </div>
+    <span class="pk-scroll-cue">Scroll</span>
+  </div>
+</section>
+
+
+<section class="pk-stats">
+  <div class="pk-wrap">
+    <div class="pk-stats-grid">
+      
+        <div class="pk-stat">
+          <div class="pk-stat-value">3</div>
+          <div class="pk-stat-delta">memory · proof · team-sync</div>
+          <div class="pk-stat-label">Plugins shipped</div>
+        </div>
+        <div class="pk-stat">
+          <div class="pk-stat-value">72 s</div>
+          <div class="pk-stat-delta">tmux + claudefast</div>
+          <div class="pk-stat-label">Real demo length</div>
+        </div>
+        <div class="pk-stat">
+          <div class="pk-stat-value">4/4</div>
+          <div class="pk-stat-delta">machine-verified</div>
+          <div class="pk-stat-label">Judge anchors</div>
+        </div>
+        <div class="pk-stat">
+          <div class="pk-stat-value">0</div>
+          <div class="pk-stat-delta">bash + jq + ffprobe</div>
+          <div class="pk-stat-label">External runtimes</div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="pk-section" id="why">
+  <div class="pk-wrap">
+    <div class="pk-ps">
+      <div class="pk-ps-block pk-ps-problem">
+        <div class="pk-section-num">01 — The Problem</div>
+        <p class="pk-ps-text">Alice 在 Claude Code 里被纠正过的错误，新开一个 session 之后 Bob 又会原样犯一遍。短期记忆死在 session 边界，整支团队反复踩同一个坑。</p>
+      </div>
+      <div class="pk-ps-block pk-ps-solution">
+        <div class="pk-section-num">02 — Our Solution</div>
+        <p class="pk-ps-text">TeamAgent 用三个 Claude Code plugin 把每一次用户纠正变成 rule card：Stop hook 抓 <em class="pk-emph">correction，PreToolUse</em> 在下一次重复发生前 deny，UserPromptSubmit 把规则注入新 session，CEO 端拿到含 4 锚点的 before/after HTML 证据。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pk-section" id="features">
+  <div class="pk-wrap">
+    <div class="pk-section-head">
+      <div class="pk-section-num">03 — Capabilities</div>
+      <h2>Made for <em class="pk-emph">5-50 人的 AI 团队，多人共用 Claude Code、有 reviewer 角色、关心可审计的 agent 行为。</em> on a deadline.</h2>
+      <p class="lead">Every part is designed to feel intentional, opinionated, and useful from the first run.</p>
+    </div>
+    <div class="pk-bento">
+      
+        <article class="pk-card">
+          <span class="pk-card-icon">✋</span>
+          <h3>Stop hook 抓纠正</h3>
+          <p>Alice 一句 &#39;don&#39;t use moment&#39;，自动落成 rule card</p>
+        </article>
+        <article class="pk-card">
+          <span class="pk-card-icon">🛑</span>
+          <h3>PreToolUse 真 deny</h3>
+          <p>Bob 下次 npm install moment，tool 执行前直接拒绝</p>
+        </article>
+        <article class="pk-card">
+          <span class="pk-card-icon">💉</span>
+          <h3>Prompt 规则注入</h3>
+          <p>新 session 一启动就被告知这条规则存在</p>
+        </article>
+        <article class="pk-card">
+          <span class="pk-card-icon">📑</span>
+          <h3>CEO 证据控制台</h3>
+          <p>/proof 命令出 4 锚点 HTML，老板看得懂</p>
+        </article>
+        <article class="pk-card">
+          <span class="pk-card-icon">🔁</span>
+          <h3>Team 跨 session 同步</h3>
+          <p>SessionStart 拉团队规则、写 conflicts.jsonl</p>
+        </article>
+        <article class="pk-card">
+          <span class="pk-card-icon">⚖️</span>
+          <h3>Judge 机械隔离</h3>
+          <p>claudefast --plugin-dir /tmp/empty 自评不可作弊</p>
+        </article>
+    </div>
+  </div>
+</section>
+
+<section class="pk-section" id="demo">
+  <div class="pk-wrap">
+    <div class="pk-section-head">
+      <div class="pk-section-num">04 — In Motion</div>
+      <h2>See <em class="pk-emph">TeamAgent</em> in action.</h2>
+    </div>
+    <div class="pk-demo-frame">
+      <video src="final.mp4" autoplay muted loop playsinline controls></video>
+    </div>
+    <p class="pk-demo-caption">53 秒 · 真实 tmux + claudefast · <a href="deck.pptx" download style="color:var(--accent);text-decoration:underline">下载 pitch deck (.pptx)</a></p>
+  </div>
+</section>
+
+<section class="pk-section" id="pricing">
+  <div class="pk-wrap">
+    <div class="pk-section-head">
+      <div class="pk-section-num">05 — Pricing</div>
+      <h2>Honest pricing. <em class="pk-emph">No surprises.</em></h2>
+    </div>
+    <div class="pk-pricing-grid">
+      
+        <div class="pk-price ">
+          
+          <span class="pk-price-tier">OSS</span>
+          <div class="pk-price-amount">
+            <span class="v">Free</span>
+            
+          </div>
+          <ul class="pk-price-features">
+            <li>MIT 协议</li><li>3 个 plugin</li><li>本地 ~/.teamagent 存储</li>
+          </ul>
+        </div>
+        <div class="pk-price featured">
+          <span class="pk-price-badge">Most popular</span>
+          <span class="pk-price-tier">Team</span>
+          <div class="pk-price-amount">
+            <span class="v">$9</span>
+            <span class="i">/user/month</span>
+          </div>
+          <ul class="pk-price-features">
+            <li>共享 rule store</li><li>跨仓库同步</li><li>conflict resolver</li>
+          </ul>
+        </div>
+        <div class="pk-price ">
+          
+          <span class="pk-price-tier">Org</span>
+          <div class="pk-price-amount">
+            <span class="v">Talk</span>
+            
+          </div>
+          <ul class="pk-price-features">
+            <li>私有部署</li><li>SSO</li><li>审计导出</li>
+          </ul>
+        </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="pk-section" id="team">
+  <div class="pk-wrap">
+    <div class="pk-section-head">
+      <div class="pk-section-num">07 — Built by</div>
+      <h2>A small team with <em class="pk-emph">opinions.</em></h2>
+    </div>
+    <div class="pk-team">
+      
+        <div class="pk-member">
+          <div class="pk-member-avatar">L</div>
+          <div class="pk-member-name">LiuShiyuMath</div>
+          <div class="pk-member-role">Maintainer</div>
+          <div class="pk-member-bio">metrix-plugin 作者，TeamBrain 思路落地</div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="pk-section" id="faq">
+  <div class="pk-wrap">
+    <div class="pk-section-head">
+      <div class="pk-section-num">08 — Frequently asked</div>
+      <h2>Common <em class="pk-emph">questions.</em></h2>
+    </div>
+    <div class="pk-faq">
+      
+        <details class="pk-faq-item">
+          <summary class="pk-faq-q">Who is TeamAgent actually for?</summary>
+          <div class="pk-faq-a">5-50 人的 AI 团队，多人共用 Claude Code、有 reviewer 角色、关心可审计的 agent 行为。. TeamAgent — 一次纠正进，全队不再犯。</div>
+        </details>
+        <details class="pk-faq-item">
+          <summary class="pk-faq-q">How does it work, in plain language?</summary>
+          <div class="pk-faq-a">TeamAgent 用三个 Claude Code plugin 把每一次用户纠正变成 rule card：Stop hook 抓 correction，PreToolUse 在下一次重复发生前 deny，UserPromptSubmit 把规则注入新 session，CEO 端拿到含 4 锚点的 before/after HTML 证据。</div>
+        </details>
+        <details class="pk-faq-item">
+          <summary class="pk-faq-q">Is there a free plan?</summary>
+          <div class="pk-faq-a">No — pricing starts at Free. MIT 协议. 3 个 plugin.</div>
+        </details>
+        <details class="pk-faq-item">
+          <summary class="pk-faq-q">Why now?</summary>
+          <div class="pk-faq-a">Claude Code plugin 接口稳定，hooks 能在 tool 执行前拒绝；团队多 session 协作已经成为日常痛点。</div>
+        </details>
+        <details class="pk-faq-item">
+          <summary class="pk-faq-q">Are you raising?</summary>
+          <div class="pk-faq-a">Currently raising Pre-seed $500K. Team plan 后端 + 多 IDE 适配 + 企业版审计能力</div>
+        </details>
+    </div>
+  </div>
+</section>
+
+<section class="pk-cta">
+  <div class="pk-wrap pk-cta-inner">
+    <h2>Install marketplace<br><span class="pk-emph">today.</span></h2>
+    <p class="pk-cta-tag">捕捉一次纠正，封锁所有重复</p>
+    <a class="pk-btn pk-btn-primary" href="https://github.com/LiuShiyuMath/metrix-plugin" style="font-size:1.05rem;padding:1.05rem 2.25rem;">Install marketplace →</a>
+  </div>
+</section>
+
+<footer class="pk-foot">
+  <div class="pk-wrap">
+    <div class="pk-foot-grid">
+      <div>
+        <div class="pk-foot-brand">TeamAgent</div>
+        <p class="pk-foot-blurb">TeamAgent — 一次纠正进，全队不再犯。</p>
+      </div>
+      
+        <div class="pk-foot-col">
+          <h4>Product</h4>
+          <a href="#features">Features</a><a href="#demo">Demo</a><a href="#pricing">Pricing</a>
+        </div>
+        <div class="pk-foot-col">
+          <h4>Company</h4>
+          <a href="#team">Team</a><a href="#">Press</a><a href="mailto:hello@github.com/LiuShiyuMath/metrix-plugin">Contact</a>
+        </div>
+      <div class="pk-foot-col">
+        <h4>Stay updated</h4>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">One email a month. Honest, no spam.</p>
+        <form class="pk-newsletter-form" onsubmit="event.preventDefault();this.querySelector('button').textContent='Thanks ✓';">
+          <div style="display:flex;gap:0.5rem;">
+            <input type="email" placeholder="you@github.com/LiuShiyuMath/metrix-plugin" required
+              style="flex:1;padding:0.55rem 0.85rem;border-radius:9999px;border:1px solid var(--rule);background:color-mix(in srgb,var(--fg) 3%,transparent);color:var(--fg);font:inherit;font-size:0.825rem;outline:none;">
+            <button type="submit"
+              style="padding:0.55rem 1rem;border-radius:9999px;border:0;background:var(--accent);color:var(--ink);font:inherit;font-weight:600;font-size:0.825rem;cursor:pointer;">→</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="pk-foot-bottom">
+      <div>© 2026 TeamAgent · github.com/LiuShiyuMath/metrix-plugin</div>
+      <div>Made with care · No trackers</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
