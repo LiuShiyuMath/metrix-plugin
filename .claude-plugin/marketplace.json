@@ -26,8 +26,8 @@
     {
       "name": "teamagent-proof-console",
       "source": "./plugins/teamagent-proof-console",
-      "description": "Generate CEO-grade proof packets that show transcript, rule card, hook event, and before/after diff for every blocked repeat mistake.",
-      "version": "0.1.0",
+      "description": "Generate CEO-grade proof packets (transcript, rule card, hook event, before/after) and run /ceo-start to render the full TeamAgent story as a talk-html zh-CN page. Bundles the 10 anthropics/knowledge-work-plugins data skills (SQL, EDA, viz, dashboards, validation) so proofs can include real data evidence.",
+      "version": "0.2.0",
       "category": "observability",
       "tags": [
         "observability",
@@ -35,7 +35,13 @@
         "audit",
         "ceo",
         "evidence",
-        "before-after"
+        "before-after",
+        "ceo-start",
+        "talk-html",
+        "data",
+        "sql",
+        "dashboard",
+        "knowledge-work"
       ]
     },
     {
