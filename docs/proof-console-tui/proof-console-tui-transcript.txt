@@ -1,0 +1,36 @@
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample                                         
+Filter: repo=All   Pane=users   Ready: use arrows, tab, enter, f, r, h, q.                                              
++-- Users                         --+ +-- UserSubmitPrompt                 --+ +-- Merged PR Evidence                --+
+| > Alice plugin maintainer         | | > usp-1001 turn correction into tea> | | TeamBrain #319 Capture correction an> |
+|   prompts 2   merged PRs 3   rep> | |   Claude tried to add moment again.> | |   by Alice   merged 2026-05-11   TB-> |
+|   focus TeamBrain, metrix-plugin  | |   signals correction / repeat-preve> | |   turns UserSubmitPrompt corrections> |
+|                                   | |   merged PR evidence 2               | |   evidence rule card / hook denial /> |
+|   Bob repo operator               | |                                      | |                                       |
+|   prompts 2   merged PRs 3   rep> | |   usp-1002 prove causal blocking     | | metrix-plugin #14 Add TeamAgent memo> |
+|   focus TeamBrain, Paperclip      | |   Show the A/B proof that empty plu> | |   by Alice   merged 2026-05-10   MM-> |
+|                                   | |   signals ab-test / plugin-dir / ju> | |   creates the event substrate for Us> |
+|   Chen product reviewer           | |   merged PR evidence 1               | |   evidence events.jsonl / rules.json> |
+|   prompts 2   merged PRs 4   rep> | |                                      | |                                       |
+|   focus metrix-plugin, Paperclip  | |                                      | | metrix-plugin #18 Add A/B plugin-dir> |
+|                                   | |                                      | |   by Alice   merged 2026-05-12   MM-> |
+|                                   | |                                      | |   separates plugin effect from runti> |
+|                                   | |                                      | |   evidence empty plugin dir / seeded> |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
+|                                   | |                                      | |                                       |
++-----------------------------------+ +--------------------------------------+ +---------------------------------------+
++-- Analysis                                                                                                         --+
+| feature-02: Proof console usage analysis                                                                             |
+| What did three Claude Code users actually do, and which merged PRs prove it?                                         |
+|                                                                                                                      |
+| Current user: Alice (plugin maintainer)                                                                              |
++----------------------------------------------------------------------------------------------------------------------+

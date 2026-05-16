@@ -1,0 +1,191 @@
+{
+  "generated_at": "2026-05-16T12:00:00+08:00",
+  "mode": "prototype-sample",
+  "feature": {
+    "id": "feature-02",
+    "name": "Proof console usage analysis",
+    "question": "What did three Claude Code users actually do, and which merged PRs prove it?"
+  },
+  "users": [
+    {
+      "id": "u-alice",
+      "name": "Alice",
+      "role": "plugin maintainer",
+      "repo_focus": ["TeamBrain", "metrix-plugin"],
+      "prompts": [
+        {
+          "id": "usp-1001",
+          "timestamp": "2026-05-10T09:14:33+08:00",
+          "intent": "turn correction into team policy",
+          "text": "Claude tried to add moment again. Capture the correction and block repeats in future sessions.",
+          "signals": ["correction", "repeat-prevention", "hook-policy"],
+          "outcome": "Converted a user correction into a durable rule card and a PreToolUse denial path.",
+          "linked_prs": ["TB-319", "MM-014"]
+        },
+        {
+          "id": "usp-1002",
+          "timestamp": "2026-05-11T16:42:07+08:00",
+          "intent": "prove causal blocking",
+          "text": "Show the A/B proof that empty plugin dir does not block but seeded rules do block.",
+          "signals": ["ab-test", "plugin-dir", "judge-harness"],
+          "outcome": "Added mechanical A/B evidence and isolated judge verdict flow.",
+          "linked_prs": ["MM-018"]
+        }
+      ]
+    },
+    {
+      "id": "u-bob",
+      "name": "Bob",
+      "role": "repo operator",
+      "repo_focus": ["TeamBrain", "Paperclip"],
+      "prompts": [
+        {
+          "id": "usp-2001",
+          "timestamp": "2026-05-12T11:05:12+08:00",
+          "intent": "ship merged proof",
+          "text": "Continue until this is legally merged, with CI watched and proof attached.",
+          "signals": ["merge-lifecycle", "ci-watch", "proof-of-work"],
+          "outcome": "Drove a PR from branch recovery through green checks and merge.",
+          "linked_prs": ["TB-323", "PC-041"]
+        },
+        {
+          "id": "usp-2002",
+          "timestamp": "2026-05-13T18:21:40+08:00",
+          "intent": "separate evidence from self-judgment",
+          "text": "Do not let the code judge itself. Dump raw JSON and let a blank-brain judge read it.",
+          "signals": ["third-party-judge", "raw-json", "evidence"],
+          "outcome": "Moved verification wording toward fixed harness outputs and raw evidence.",
+          "linked_prs": ["TB-325"]
+        }
+      ]
+    },
+    {
+      "id": "u-chen",
+      "name": "Chen",
+      "role": "product reviewer",
+      "repo_focus": ["metrix-plugin", "Paperclip"],
+      "prompts": [
+        {
+          "id": "usp-3001",
+          "timestamp": "2026-05-14T20:10:55+08:00",
+          "intent": "replace CEO-only output",
+          "text": "I need to dive into user usage, not just read a fixed CEO HTML summary.",
+          "signals": ["deep-dive", "usage-analysis", "not-static-html"],
+          "outcome": "Reframed proof console around prompts, merged PRs, and drill-down analysis.",
+          "linked_prs": ["MM-022"]
+        },
+        {
+          "id": "usp-3002",
+          "timestamp": "2026-05-15T10:37:18+08:00",
+          "intent": "compare three repos",
+          "text": "Show how three repositories prove the same behavior from different angles.",
+          "signals": ["cross-repo", "merged-prs", "evidence-map"],
+          "outcome": "Grouped merged PR evidence by repo and usage intent.",
+          "linked_prs": ["TB-339", "PC-046", "MM-024"]
+        }
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "TB-319",
+      "repo": "TeamBrain",
+      "number": 319,
+      "title": "Capture correction and enforce repeat-blocking rule",
+      "merged_at": "2026-05-11T03:24:08Z",
+      "author": "Alice",
+      "impact": "turns UserSubmitPrompt corrections into shared policy",
+      "evidence": ["rule card", "hook denial", "stream-json event"]
+    },
+    {
+      "id": "TB-323",
+      "repo": "TeamBrain",
+      "number": 323,
+      "title": "Watch CI and complete protected merge lifecycle",
+      "merged_at": "2026-05-11T09:58:44Z",
+      "author": "Bob",
+      "impact": "proves operator follow-through from prompt to merged PR",
+      "evidence": ["green checks", "merge state clean", "squash merge"]
+    },
+    {
+      "id": "TB-325",
+      "repo": "TeamBrain",
+      "number": 325,
+      "title": "Isolate verdict judge from implementation state",
+      "merged_at": "2026-05-11T14:36:19Z",
+      "author": "Bob",
+      "impact": "prevents proof console from self-certifying its own output",
+      "evidence": ["judge.json", "blank plugin dir", "verdict prompt"]
+    },
+    {
+      "id": "TB-339",
+      "repo": "TeamBrain",
+      "number": 339,
+      "title": "Route proof artifacts into reviewable contribution evidence",
+      "merged_at": "2026-05-14T08:33:52Z",
+      "author": "Chen",
+      "impact": "connects merged PRs to human-acceptable proof of work",
+      "evidence": ["PR tree", "person summary", "linked artifact"]
+    },
+    {
+      "id": "MM-014",
+      "repo": "metrix-plugin",
+      "number": 14,
+      "title": "Add TeamAgent memory hooks and local rule store",
+      "merged_at": "2026-05-10T13:19:06Z",
+      "author": "Alice",
+      "impact": "creates the event substrate for UserSubmitPrompt analysis",
+      "evidence": ["events.jsonl", "rules.jsonl", "Stop hook"]
+    },
+    {
+      "id": "MM-018",
+      "repo": "metrix-plugin",
+      "number": 18,
+      "title": "Add A/B plugin-dir proof harness",
+      "merged_at": "2026-05-12T05:47:28Z",
+      "author": "Alice",
+      "impact": "separates plugin effect from runtime coincidence",
+      "evidence": ["empty plugin dir", "seeded plugin dir", "denial event"]
+    },
+    {
+      "id": "MM-022",
+      "repo": "metrix-plugin",
+      "number": 22,
+      "title": "Prototype prompt-to-PR usage console",
+      "merged_at": "2026-05-15T02:11:05Z",
+      "author": "Chen",
+      "impact": "moves feature 02 from fixed summary to drill-down analysis",
+      "evidence": ["usage matrix", "prompt clusters", "repo pivots"]
+    },
+    {
+      "id": "MM-024",
+      "repo": "metrix-plugin",
+      "number": 24,
+      "title": "Record interactive terminal proof walkthrough",
+      "merged_at": "2026-05-15T16:02:39Z",
+      "author": "Chen",
+      "impact": "makes the proof console inspectable as a terminal artifact",
+      "evidence": ["tmux capture", "asciinema cast", "keyboard path"]
+    },
+    {
+      "id": "PC-041",
+      "repo": "Paperclip",
+      "number": 41,
+      "title": "Preserve remote launch proof in operator workflow",
+      "merged_at": "2026-05-12T23:08:16Z",
+      "author": "Bob",
+      "impact": "shows prompt-driven launch proof beyond TeamBrain",
+      "evidence": ["ssh tunnel", "health check", "finish flag"]
+    },
+    {
+      "id": "PC-046",
+      "repo": "Paperclip",
+      "number": 46,
+      "title": "Attach cross-repo evidence map to release review",
+      "merged_at": "2026-05-15T06:42:01Z",
+      "author": "Chen",
+      "impact": "links feature usage claims to merged PR evidence",
+      "evidence": ["release review", "evidence map", "merged PR list"]
+    }
+  ]
+}
