@@ -57,6 +57,19 @@ pass_criteria() {
         (.mp4_ok == true or .mp4_ok == null)
       ' >/dev/null 2>&1 && echo true || echo false
       ;;
+    workflow-checks)
+      printf '%s' "$m" | jq -e '
+        (.marketplace_plugin_count // 0) == 4 and
+        .workflow_in_marketplace == true and
+        .all_plugin_json_valid == true and
+        .gen_present == true and
+        .gen_deterministic == true and
+        .valid_issue_ok == true and
+        .pr_url_rejected == true and
+        .empty_arg_rejected == true and
+        .gen_exit_zero == true
+      ' >/dev/null 2>&1 && echo true || echo false
+      ;;
     *) echo true ;;
   esac
 }

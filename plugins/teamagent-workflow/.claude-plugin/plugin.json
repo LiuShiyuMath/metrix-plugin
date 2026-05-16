@@ -1,0 +1,22 @@
+{
+  "name": "teamagent-workflow",
+  "description": "Issue → grill → implement → proof handoff workflow. Claim a GitHub issue, auto-generate chatgpt.com and claude.ai grill-me session URLs, hand off implementation, and write the proof links back to the PR via gh pr comment.",
+  "version": "0.1.0",
+  "author": {
+    "name": "libz-renlab-ai"
+  },
+  "homepage": "https://github.com/libz-renlab-ai/TeamBrain",
+  "license": "MIT",
+  "keywords": [
+    "teamagent",
+    "workflow",
+    "issue",
+    "handoff",
+    "grill",
+    "proof",
+    "pr",
+    "chatgpt-url",
+    "claude-ai-url",
+    "gh-pr-comment"
+  ]
+}

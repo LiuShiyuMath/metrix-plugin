@@ -6,7 +6,7 @@
   },
   "description": "metrix-plugin marketplace · TeamAgent: capture corrections in one Claude Code session, block repeats in the next, prove it to the CEO.",
   "homepage": "https://github.com/libz-renlab-ai/TeamBrain",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "plugins": [
     {
       "name": "teamagent-memory",
@@ -57,6 +57,24 @@
         "rules",
         "conflict-resolution",
         "promotion"
+      ]
+    },
+    {
+      "name": "teamagent-workflow",
+      "source": "./plugins/teamagent-workflow",
+      "description": "Issue → grill → implement → proof handoff workflow. Claim a GitHub issue, auto-generate chatgpt.com and claude.ai grill-me session URLs, hand off implementation, and write proof links back to the PR via gh pr comment.",
+      "version": "0.1.0",
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "issue",
+        "handoff",
+        "grill",
+        "proof",
+        "pr",
+        "chatgpt-url",
+        "claude-ai-url",
+        "gh-pr-comment"
       ]
     }
   ]
