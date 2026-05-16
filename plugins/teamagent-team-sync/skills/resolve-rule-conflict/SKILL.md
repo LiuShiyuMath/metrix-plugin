@@ -15,8 +15,8 @@ description: Use when an inbound team rule conflicts with a local rule on the sa
               |
    keep local | accept team | merge | drop both
               v
-        ~/.teamagent/rules.jsonl  (resolved)
-        ~/.teamagent/conflicts.jsonl  (audit row marked resolved)
+        ~/.teamagent/rules.jsonl   (local store, maybe rewritten)
+        ~/.teamagent/resolved.jsonl  (marker the SessionStart hook reads)
 ```
 
 # resolve-rule-conflict
@@ -39,14 +39,17 @@ and write the chosen rule back into the user store.
 ## Procedure
 
 1. Open `~/.teamagent/conflicts.jsonl`. Find the target row. Each row has
-   `{ ts, pattern, local, team }`.
+   `{ ts, key, pattern, local, team }`. The `key` is a JSON-array string
+   `["<pattern>","<local.correct>","<team.correct>"]` — the stable identity
+   the SessionStart hook uses to decide whether a conflict is resolved.
+   Copy it **verbatim**; do not recompute or reformat it (a single space
+   difference breaks the match).
 2. Render both sides to the user side-by-side, including:
    - `id`, `trigger.pattern`
    - `wrong`, `correct`, `why`
    - `confidence`, `captured_at`, `published_by` (team only)
 3. Ask the user to choose one of:
-   - **keep local** — discard the inbound team rule. Mark the conflict row
-     `{ "resolved": "keep_local", "resolved_at": <ts> }`.
+   - **keep local** — discard the inbound team rule.
    - **accept team** — replace the local rule. Find every line in
      `~/.teamagent/rules.jsonl` whose `trigger.pattern` matches and rewrite
      them in place (atomic temp file + rename). Append the team rule.
@@ -58,15 +61,28 @@ and write the chosen rule back into the user store.
    - **drop both** — remove the local rule entirely; do not import the
      team rule. Useful when the disagreement reveals both sides were
      wrong.
-4. Always update the conflict row to record the choice.
+4. **Write the resolution marker (load-bearing).** Append one line to
+   `~/.teamagent/resolved.jsonl`:
+
+   ```json
+   { "key": <conflict.key verbatim>, "decision": "<keep_local|accept_team|merge|drop_both>", "resolved_at": "<ISO8601 UTC>", "winning_rule_id": "<id or null>" }
+   ```
+
+   This is the only thing that stops the SessionStart hook from
+   re-surfacing the conflict. The hook matches on `key` (exact string).
+   If you also keep an audit trail in `~/.teamagent/conflicts.jsonl`,
+   that is optional — the hook ignores conflict-row mutations and reads
+   `resolved.jsonl` alone. Never hand-build the key from the pattern;
+   copy `conflict.key` byte-for-byte.
 5. Echo back the decision and the resulting rule id.
 
 ## Output contract
 
 - One-line summary of the decision and which rule id (if any) is now
   authoritative.
-- A short JSON block with `{ "pattern", "decision", "resolved_at",
-  "winning_rule_id" }`.
+- A short JSON block with `{ "key", "pattern", "decision",
+  "resolved_at", "winning_rule_id" }` — the same `key` written to
+  `resolved.jsonl`, so a proof packet can verify the loop closed.
 
 ## Failure modes
 
