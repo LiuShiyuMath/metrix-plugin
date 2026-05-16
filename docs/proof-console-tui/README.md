@@ -27,6 +27,7 @@ Keys:
 - `up/down` or `j/k` move within the active pane.
 - `tab` switches between users and prompts.
 - `enter` opens prompt detail.
+- `m` cycles the analysis pane through report, dive, and map modes.
 - `f` cycles repo filters.
 - `h` toggles help.
 - `q` exits.
@@ -51,6 +52,14 @@ Replace `sample-data.json` with exported rows from the real pipeline:
 - `prs[]` contains only merged PR evidence.
 
 The console should not claim proof when no merged PR row exists.
+
+## Prototype Shape
+
+- Report mode summarizes 3 Claude Code users, UserSubmitPrompt rows,
+  merged PR evidence, and repo coverage.
+- Dive mode follows one prompt from raw ask to intent, signals, and
+  linked merged PRs.
+- Map mode pivots across repos and signal clusters.
 
 ## HTML
 

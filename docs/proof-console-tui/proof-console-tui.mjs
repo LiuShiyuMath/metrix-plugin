@@ -52,12 +52,14 @@ const state = {
   selectedPrompt: 0,
   activePane: "users",
   repoFilter: "All",
+  analysisMode: "Report",
   detail: false,
   help: false,
-  status: "Ready: use arrows, tab, enter, f, r, h, q."
+  status: "Ready: arrows, tab, enter, m, f, r, h, q."
 };
 
 const repos = ["All", ...Array.from(new Set(data.prs.map((pr) => pr.repo)))];
+const analysisModes = ["Report", "Dive", "Map"];
 
 function clear() {
   process.stdout.write(`${ESC}?25l${ESC}2J${ESC}H`);
@@ -110,6 +112,29 @@ function filteredPrs() {
   return data.prs.filter((pr) => promptIds.includes(pr.id) && (state.repoFilter === "All" || pr.repo === state.repoFilter));
 }
 
+function allPrompts() {
+  return data.users.flatMap((user) => user.prompts.map((prompt) => ({ user, prompt })));
+}
+
+function countBy(values) {
+  return values.reduce((acc, value) => {
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function topSignals() {
+  return Object.entries(countBy(allPrompts().flatMap(({ prompt }) => prompt.signals)))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+function repoCoverage() {
+  return data.prs.map((pr) => {
+    const linkedPrompts = allPrompts().filter(({ prompt }) => prompt.linked_prs.includes(pr.id));
+    return { pr, linkedPrompts };
+  });
+}
+
 function userLines() {
   return data.users.flatMap((user, index) => {
     const userPrs = data.prs.filter((pr) =>
@@ -157,15 +182,24 @@ function repoLines() {
 }
 
 function insightLines() {
+  if (state.analysisMode === "Dive") return diveLines();
+  if (state.analysisMode === "Map") return mapLines();
+  return reportLines();
+}
+
+function reportLines() {
   const user = selectedUser();
   const prompt = selectedPrompt();
   const prs = promptPrs(prompt);
   const repoNames = Array.from(new Set(prs.map((pr) => pr.repo))).join(", ");
   const signals = Array.from(new Set(user.prompts.flatMap((item) => item.signals)));
   const conversion = prs.length ? "prompt -> merged PR evidence exists" : "no linked merge";
+  const promptTotal = allPrompts().length;
+  const repoTotal = new Set(data.prs.map((pr) => pr.repo)).size;
   return [
     `${COLORS.bold}${data.feature.id}: ${data.feature.name}${COLORS.reset}`,
     data.feature.question,
+    `Scope: ${data.users.length} Claude Code users / ${promptTotal} UserSubmitPrompt rows / ${data.prs.length} merged PRs / ${repoTotal} repos`,
     "",
     `Current user: ${user.name} (${user.role})`,
     `Current prompt: ${prompt.id} / ${prompt.intent}`,
@@ -182,6 +216,61 @@ function insightLines() {
     `${COLORS.cyan}Selected outcome${COLORS.reset}`,
     prompt.outcome
   ].join("\n").split("\n");
+}
+
+function diveLines() {
+  const user = selectedUser();
+  const prompt = selectedPrompt();
+  const prs = promptPrs(prompt);
+  return [
+    `${COLORS.bold}Dive path${COLORS.reset}`,
+    `${user.name} -> ${prompt.id} -> ${prs.length} merged PR evidence rows`,
+    "",
+    `${COLORS.cyan}UserSubmitPrompt${COLORS.reset}`,
+    prompt.text,
+    "",
+    `${COLORS.cyan}Intent and signals${COLORS.reset}`,
+    `intent: ${prompt.intent}`,
+    `signals: ${prompt.signals.join(" / ")}`,
+    "",
+    `${COLORS.cyan}Merged PR proof${COLORS.reset}`,
+    ...prs.flatMap((pr) => [
+      `${pr.repo} #${pr.number} ${pr.title}`,
+      `impact: ${pr.impact}`,
+      `evidence: ${pr.evidence.join(" / ")}`
+    ]),
+    "",
+    `${COLORS.cyan}Analyst note${COLORS.reset}`,
+    "The console treats merged PRs as evidence rows, not as decoration.",
+    "A prompt without linked merged PRs stays visible but does not become proof."
+  ];
+}
+
+function mapLines() {
+  const promptTotal = allPrompts().length;
+  const repoCounts = countBy(data.prs.map((pr) => pr.repo));
+  const repoSummary = Object.entries(repoCounts)
+    .map(([repo, count]) => `${repo} ${count}`)
+    .join(" / ");
+  const signalSummary = topSignals()
+    .slice(0, 5)
+    .map(([signal, count]) => `${signal} ${count}`)
+    .join(" / ");
+  return [
+    `${COLORS.bold}Usage map${COLORS.reset}`,
+    `${data.users.length} users  ${promptTotal} prompts  ${data.prs.length} merged PRs`,
+    "",
+    `${COLORS.cyan}Repo proof coverage${COLORS.reset}`,
+    repoSummary,
+    "",
+    `${COLORS.cyan}Signal clusters${COLORS.reset}`,
+    signalSummary,
+    "",
+    `${COLORS.cyan}Prompt -> PR map${COLORS.reset}`,
+    ...repoCoverage().flatMap(({ pr, linkedPrompts }) => [
+      `${pr.repo} #${pr.number} <= ${linkedPrompts.map(({ prompt }) => prompt.id).join(", ") || "unlinked"}`
+    ])
+  ];
 }
 
 function detailLines() {
@@ -213,6 +302,7 @@ function helpLines() {
     "up/down or j/k: move in current pane",
     "tab: switch users/prompts pane",
     "enter: open/close prompt detail",
+    "m: switch analysis mode: report/dive/map",
     "f: cycle repo filter",
     "r: reset user/prompt/filter",
     "h: help",
@@ -231,13 +321,14 @@ function render() {
   const leftW = Math.floor(columns * 0.31);
   const midW = Math.floor(columns * 0.34);
   const rightW = columns - leftW - midW - 2;
-  const topH = rows - 8;
-  const bottomH = 6;
+  const topH = rows - 10;
+  const bottomH = 8;
   const header = `${COLORS.bold}${COLORS.cyan}PROOF CONSOLE TUI${COLORS.reset}  ${data.feature.id}  ${COLORS.dim}${data.generated_at}  data=${data.mode}${COLORS.reset}`;
-  const sub = `Filter: repo=${state.repoFilter}   Pane=${state.activePane}   ${state.status}`;
+  const sub = `Filter: repo=${state.repoFilter}   Pane=${state.activePane}   Mode=${state.analysisMode}   ${state.status}`;
   const left = box("Users", userLines(), leftW, topH, state.activePane === "users");
   const mid = box("UserSubmitPrompt", state.detail ? detailLines() : promptLines(), midW, topH, state.activePane === "prompts");
-  const right = box(state.help ? "Help" : "Merged PR Evidence", state.help ? helpLines() : repoLines(), rightW, topH, false);
+  const rightTitle = state.help ? "Help" : `Merged PR Evidence: ${state.repoFilter}`;
+  const right = box(rightTitle, state.help ? helpLines() : repoLines(), rightW, topH, false);
   const bottom = box("Analysis", insightLines(), columns, bottomH, false);
 
   clear();
@@ -268,10 +359,15 @@ function handleKey(chunk) {
   if (key === "\t") state.activePane = state.activePane === "users" ? "prompts" : "users";
   if (key === "h") state.help = !state.help;
   if (key === "\r") state.detail = !state.detail;
+  if (key === "m") {
+    const next = (analysisModes.indexOf(state.analysisMode) + 1) % analysisModes.length;
+    state.analysisMode = analysisModes[next];
+  }
   if (key === "r") {
     state.selectedUser = 0;
     state.selectedPrompt = 0;
     state.repoFilter = "All";
+    state.analysisMode = "Report";
     state.detail = false;
     state.help = false;
   }
@@ -295,7 +391,9 @@ function runDemo() {
     ["j", 650],
     ["\t", 650],
     ["j", 650],
+    ["m", 650],
     ["\r", 1000],
+    ["m", 650],
     ["f", 650],
     ["f", 650],
     ["h", 1000],
@@ -327,9 +425,16 @@ function renderHtmlPreview(input) {
     acc[pr.repo] = (acc[pr.repo] || 0) + 1;
     return acc;
   }, {});
+  const promptCount = input.users.reduce((count, user) => count + user.prompts.length, 0);
+  const signalRows = Object.entries(countBy(input.users.flatMap((user) => user.prompts.flatMap((prompt) => prompt.signals))))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 6)
+    .map(([signal, count]) => `<li>${escapeHtml(signal)} <b>${count}</b></li>`)
+    .join("");
   const cards = input.users.map((user) => {
     const prIds = new Set(user.prompts.flatMap((prompt) => prompt.linked_prs));
-    return `<section><h2>${escapeHtml(user.name)}</h2><p>${escapeHtml(user.role)}</p><strong>${user.prompts.length}</strong> prompts <strong>${prIds.size}</strong> merged PRs</section>`;
+    const intents = user.prompts.map((prompt) => `<li>${escapeHtml(prompt.intent)}</li>`).join("");
+    return `<section><h2>${escapeHtml(user.name)}</h2><p>${escapeHtml(user.role)}</p><strong>${user.prompts.length}</strong> prompts <strong>${prIds.size}</strong> merged PRs<ul>${intents}</ul></section>`;
   }).join("");
   const repoRows = Object.entries(repoCounts).map(([repo, count]) => `<li>${escapeHtml(repo)}: ${count} merged PRs</li>`).join("");
   return `<!doctype html>
@@ -339,20 +444,24 @@ function renderHtmlPreview(input) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Proof Console TUI Design Preview</title>
 <style>
-body{margin:0;background:#101418;color:#e7edf2;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-main{max-width:1120px;margin:0 auto;padding:32px}
-.term{border:1px solid #3a4652;background:#141b22;padding:18px;box-shadow:0 18px 60px #0008}
-.grid{display:grid;grid-template-columns:1fr 1.1fr 1.2fr;gap:12px}
-section{border:1px solid #34414d;padding:14px;min-height:150px}
-h1,h2{margin:0 0 10px}.accent{color:#6ee7f9}.muted{color:#90a1ad}
+body{margin:0;background:#0c1116;color:#e7edf2;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+main{max-width:1180px;margin:0 auto;padding:32px}
+.term{border:1px solid #3a4652;background:#121a22;padding:18px;box-shadow:0 18px 60px #0008}
+.bar{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #303b45;padding-bottom:12px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1.15fr 1.25fr;gap:12px}
+section{border:1px solid #34414d;padding:14px;min-height:172px}
+h1,h2{margin:0 0 10px}.accent{color:#6ee7f9}.muted{color:#90a1ad}.good{color:#86efac}
+ul{padding-left:18px}.analysis{margin-top:12px;border-color:#596775}.kbd{color:#facc15}
 </style>
 </head>
 <body><main>
 <p class="muted">Design preview only. The report surface is the terminal TUI.</p>
 <div class="term">
-<h1><span class="accent">PROOF CONSOLE TUI</span> ${escapeHtml(input.feature.id)}</h1>
+<div class="bar"><h1><span class="accent">PROOF CONSOLE TUI</span> ${escapeHtml(input.feature.id)}</h1><span class="muted">mode=<span class="kbd">report/dive/map</span></span></div>
 <p>${escapeHtml(input.feature.question)}</p>
-<div class="grid">${cards}<section><h2>Repos</h2><ul>${repoRows}</ul></section></div>
+<p class="good">${input.users.length} users / ${promptCount} UserSubmitPrompt rows / ${input.prs.length} merged PRs / ${Object.keys(repoCounts).length} repos</p>
+<div class="grid">${cards}<section><h2>Repos</h2><ul>${repoRows}</ul><h2>Signals</h2><ul>${signalRows}</ul></section></div>
+<section class="analysis"><h2>Analysis Pane</h2><p>UserSubmitPrompt -> intent/signals -> merged PR evidence. HTML is only a preview; the operator dives in with the TUI.</p></section>
 </div>
 </main></body></html>
 `;
