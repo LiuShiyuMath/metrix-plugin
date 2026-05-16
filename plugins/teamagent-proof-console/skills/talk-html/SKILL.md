@@ -47,7 +47,7 @@ Save to: `~/.claude/talk-html/<slug>-YYYYMMDD-HHMMSS.html`
 Hard requirements:
 
 - **Language (load-bearing)**: All artifact content — title, lede, headings, body prose, captions, pull-quotes, CTA copy, footer text — **must be in Simplified Chinese (zh-CN)**. The only English allowed is: structural metadata (`<!-- talk-html-meta ... -->`), file paths, shell commands, code snippets, URLs, technical identifiers (slug, session id), and short inline tokens where a Chinese rendering would be confusing (e.g. `gh gist create`, `~/.claude/...`). Set `<html lang="zh-CN">` and include `<meta charset="utf-8">`. Avoid 中英夹杂 marketing speak ("我们 leverage best-of-breed solutions") — Chinese prose should read like a human wrote it.
-- **Self-contained**: inline CSS, no external JS. Google Fonts via `<link>` is allowed. The one exception: a single inline `onclick` handler for the audit-pill copy-to-clipboard is permitted.
+- **Self-contained**: inline CSS, no external JS. Google Fonts via `<link>` is allowed. Two scoped inline scripts are permitted, nothing else: (1) the audit-pill copy-to-clipboard handler, and (2) in **interactive mode** only, the install-prompt copy block (see "Interactive mode" below). No frameworks, no network calls, no analytics.
 - **Editorial typography**: pair a Latin display/body family with **Noto Serif SC** (思源宋体) — the Chinese face must carry the body text, not fall through to a system default. Recommended pairings: Fraunces + Noto Serif SC, or Newsreader + Noto Serif SC. Name the typographic mood in one sentence (Chinese is fine); if you cannot, redo it.
 - **Diagrams**: SVG. Diagram labels in Chinese (or technical English where labels reference real identifiers like `index.jsonl`). Reserve ASCII art for explicit "terminal" flavor sections only.
 - **Reflow**: works on mobile (≤ 420 px). No fixed pixel heights that clip text. Chinese reflows differently from English — test the narrow viewport.
@@ -87,6 +87,40 @@ In `<body>`, append a small fixed pill (`position: fixed; bottom: 1rem; right: 1
 - Link to `file://<absolute path to session jsonl or job dir>`.
 
 In the document footer, also include a one-line text version: "Made in Claude session `<short id>` · `<date>` · `<template>`", with the same `file://` link.
+
+### 5b. Interactive mode (install-prompt copy block)
+
+Invoke interactive mode when the page exists so a reader can **act**, not
+just read — specifically when the page presents a shareable, installable
+artifact (a `teamagent-share` manifest URL from the `teamagent-team-sync`
+plugin). Trigger phrases: "interactive", "copy button", "one-click
+install", "让别人能一键装", "可交互", "copy skills".
+
+What interactive mode adds (the second permitted inline `<script>`):
+
+- An on-page **option control**: scope radios `all | plugins | skills`
+  and a `dry-run` checkbox.
+- A live `<pre>` showing the exact install prompt for the current toggle
+  state, plus this page's own local path appended as a comment.
+- A **copy button** that writes that prompt to the clipboard. The reader
+  pastes it into Claude Code and the setup installs in one click.
+
+The prompt-building JS is **load-bearing and deterministic**: it must be
+the byte-for-byte twin of
+`plugins/teamagent-team-sync/bin/teamagent-install-prompt`. No model is
+in the prompt path — same rule as `gen-grill-urls.sh`. Generate the
+canonical strings on the CLI first:
+
+```bash
+bin/teamagent-install-prompt "<share-url>" --scope all --html "<page-path>"
+```
+
+then transcribe its `prompt` template into the page's `build()` function
+verbatim (substitute `SHARE_URL` and `HTML_PATH` at generate time). If
+the script's output and the page's copied text ever differ, the page is
+wrong — regenerate it. The skeleton at `templates/skeleton.html` carries
+the reference copy block; read it once, then design the real one to match
+the artifact's visual identity.
 
 ### 6. Preview locally
 
@@ -178,6 +212,6 @@ The index lives at `~/.claude/talk-html/index.jsonl` — one JSON object per lin
 1. Real editorial design. One-sentence mood description must exist.
 2. No emoji unless the user asked for emoji.
 3. No fixed pixel heights that clip reflow.
-4. Diagrams in SVG, not Mermaid (Mermaid blocks need JS; we ship JS-free except the audit-pill copy handler).
+4. Diagrams in SVG, not Mermaid (Mermaid needs JS). The only inline scripts allowed are the audit-pill copy handler and, in interactive mode, the install-prompt copy block — both must be deterministic and dependency-free.
 5. File < 200 KB unless content genuinely demands more.
 6. Every HTML can be traced back to its originating session in one click via the audit pill **and** the `<!-- talk-html-meta -->` comment **and** the index.jsonl row.

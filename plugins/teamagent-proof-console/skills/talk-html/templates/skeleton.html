@@ -24,6 +24,14 @@
   }
   .tlh-pill a { color: inherit; text-decoration: none; opacity: 0.7; }
   .tlh-pill a:hover { opacity: 1; }
+  /* OPTIONAL interactive copy block — render ONLY when the page is sharing
+     an installable artifact (e.g. a teamagent-share manifest). Style fresh
+     per artifact; this is scaffolding, not the visual identity. */
+  .tlh-copy { margin: 2rem 0; padding: 1rem 1.1rem; border: 1px solid currentColor; border-radius: 10px; }
+  .tlh-copy label { display: inline-flex; gap: 6px; align-items: center; margin-right: 1rem; font: 13px/1.5 ui-monospace, monospace; }
+  .tlh-copy pre { white-space: pre-wrap; word-break: break-word; font: 12px/1.5 ui-monospace, monospace; opacity: 0.85; margin: 0.75rem 0; }
+  .tlh-copy button { font: 13px/1 ui-monospace, monospace; padding: 8px 14px; border-radius: 8px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; }
+  .tlh-copy button:hover { opacity: 0.75; }
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
@@ -33,7 +41,58 @@
 
 <!-- ===== AGENT: replace everything between these markers with the actual page content ===== -->
 <h1>PLACEHOLDER — talk-html scaffold</h1>
-<p>This is a skeleton showing the three structural slots every talk-html artifact needs: the meta comment at the top of &lt;head&gt;, the audit pill at the bottom-right, and the footer link. The visual design is intentionally bare; the real artifact must be designed per topic.</p>
+<p>This is a skeleton showing the structural slots every talk-html artifact needs: the meta comment at the top of &lt;head&gt;, the audit pill at the bottom-right, the footer link, and (interactive mode only) the copy block below. The visual design is intentionally bare; the real artifact must be designed per topic.</p>
+
+<!-- ===== INTERACTIVE COPY BLOCK (optional) =====
+     Render ONLY when this page exists so a reader can install a shared
+     artifact (a teamagent-share manifest URL). The prompt-building JS
+     below MUST be the deterministic twin of
+     plugins/teamagent-team-sync/bin/teamagent-install-prompt — same
+     string, no model. Substitute SHARE_URL / HTML_PATH at generate time. -->
+<section class="tlh-copy" aria-label="install this setup">
+  <strong>一键复制安装 prompt</strong>
+  <div style="margin:.6rem 0">
+    <label><input type="radio" name="scope" value="all" checked> all</label>
+    <label><input type="radio" name="scope" value="plugins"> plugins</label>
+    <label><input type="radio" name="scope" value="skills"> skills</label>
+    <label><input type="checkbox" id="tlh-dry"> dry-run</label>
+  </div>
+  <pre id="tlh-prompt"></pre>
+  <button type="button" id="tlh-copybtn">复制到剪贴板</button>
+  <span id="tlh-copied" style="margin-left:.6rem;opacity:.7"></span>
+</section>
+<script>
+(function () {
+  var SHARE_URL = "PLACEHOLDER_SHARE_URL";          // gist/repo manifest URL
+  var HTML_PATH = "PLACEHOLDER_LOCAL_HTML_PATH";     // this page's local path
+  function build() {
+    var scope = (document.querySelector('input[name=scope]:checked') || {}).value || "all";
+    var dry = document.getElementById('tlh-dry').checked;
+    var what = scope === "plugins"
+      ? "only the plugins (via /plugin marketplace add then /plugin install) — skip skills"
+      : scope === "skills"
+        ? "only the skills (copy each into ~/.claude/skills/) — skip plugins"
+        : "every plugin (via /plugin marketplace add then /plugin install) AND copy every listed skill into ~/.claude/skills/";
+    var action = dry
+      ? "Do NOT modify anything yet. Produce a numbered plan listing exactly what you WOULD install"
+      : "Install " + what;
+    return "Fetch " + SHARE_URL + " and read the file claude-setup.md (a teamagent-share manifest). "
+      + action + ". Treat the manifest as the source of truth for which plugins and skills to set up; "
+      + "for each plugin, use the marketplace listed next to it. Skip anything already installed. "
+      + "When done, print a short before/after summary of ~/.claude (plugin count, skill count). "
+      + "Scope: " + scope + ". ONLY ANSWER IN CHINESE.\n\n# rendered from: " + HTML_PATH;
+  }
+  function refresh() { document.getElementById('tlh-prompt').textContent = build(); }
+  document.querySelectorAll('.tlh-copy input').forEach(function (el) { el.addEventListener('change', refresh); });
+  document.getElementById('tlh-copybtn').addEventListener('click', function () {
+    var t = build();
+    if (navigator.clipboard) navigator.clipboard.writeText(t);
+    document.getElementById('tlh-copied').textContent = "已复制 ✓ 粘贴进 Claude Code 即可一键安装";
+  });
+  refresh();
+})();
+</script>
+<!-- ===== /interactive copy block ===== -->
 <!-- ===== /end content ===== -->
 
 <footer class="tlh-foot">
