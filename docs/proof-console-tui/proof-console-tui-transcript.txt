@@ -1,3 +1,45 @@
+
+===== initial report =====
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=users   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+| > Alice plugin maintainer            | | > usp-1001 turn correction into team po> | | TeamBrain #319 Capture correction and e> |
+|   prompts 2   merged PRs 3   repos 2 | |   Claude tried to add moment again. Cap> | |   by Alice   merged 2026-05-11   TB-319  |
+|   focus TeamBrain, metrix-plugin     | |   signals correction / repeat-preventio> | |   turns UserSubmitPrompt corrections in> |
+|                                      | |   merged PR evidence 2                   | |   evidence rule card / hook denial / st> |
+|   Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | |   usp-1002 prove causal blocking         | | metrix-plugin #14 Add TeamAgent memory > |
+|   focus TeamBrain, Paperclip         | |   Show the A/B proof that empty plugin > | |   by Alice   merged 2026-05-10   MM-014  |
+|                                      | |   signals ab-test / plugin-dir / judge-> | |   creates the event substrate for UserS> |
+|   Chen product reviewer              | |   merged PR evidence 1                   | |   evidence events.jsonl / rules.jsonl /> |
+|   prompts 2   merged PRs 4   repos 3 | |                                          | |                                          |
+|   focus metrix-plugin, Paperclip     | |                                          | | metrix-plugin #18 Add A/B plugin-dir pr> |
+|                                      | |                                          | |   by Alice   merged 2026-05-12   MM-018  |
+|                                      | |                                          | |   separates plugin effect from runtime > |
+|                                      | |                                          | |   evidence empty plugin dir / seeded pl> |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| feature-02: Proof console usage analysis                                                                                       |
+| What did three Claude Code users actually do, and which merged PRs prove it?                                                   |
+| Scope: 3 Claude Code users / 6 UserSubmitPrompt rows / 10 merged PRs / 3 repos                                                 |
+|                                                                                                                                |
+| Current user: Alice (plugin maintainer)                                                                                        |
+| Current prompt: usp-1001 / turn correction into team policy                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------+
+
+===== select Bob =====
 PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
 Filter: repo=All   Pane=users   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
 +-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
@@ -74,6 +116,86 @@ Filter: repo=All   Pane=users   Mode=Report   Ready: arrows, tab, enter, m, f, r
 | Current user: Bob (repo operator)                                                                                              |
 | Current prompt: usp-2001 / ship merged proof                                                                                   |
 +--------------------------------------------------------------------------------------------------------------------------------+
+
+===== focus prompts =====
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=users   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | | > usp-2001 ship merged proof             | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | |   Continue until this is legally merged> | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |   signals merge-lifecycle / ci-watch / > | |   proves operator follow-through from p> |
+|                                      | |   merged PR evidence 2                   | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | |   usp-2002 separate evidence from self-> | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | |   Do not let the code judge itself. Dum> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |   signals third-party-judge / raw-json > | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | |   merged PR evidence 1                   | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | |                                          | |                                          |
+|   focus metrix-plugin, Paperclip     | |                                          | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |                                          | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |                                          | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| feature-02: Proof console usage analysis                                                                                       |
+| What did three Claude Code users actually do, and which merged PRs prove it?                                                   |
+| Scope: 3 Claude Code users / 6 UserSubmitPrompt rows / 10 merged PRs / 3 repos                                                 |
+|                                                                                                                                |
+| Current user: Bob (repo operator)                                                                                              |
+| Current prompt: usp-2001 / ship merged proof                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------+
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=prompts   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | | > usp-2001 ship merged proof             | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | |   Continue until this is legally merged> | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |   signals merge-lifecycle / ci-watch / > | |   proves operator follow-through from p> |
+|                                      | |   merged PR evidence 2                   | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | |   usp-2002 separate evidence from self-> | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | |   Do not let the code judge itself. Dum> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |   signals third-party-judge / raw-json > | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | |   merged PR evidence 1                   | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | |                                          | |                                          |
+|   focus metrix-plugin, Paperclip     | |                                          | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |                                          | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |                                          | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| feature-02: Proof console usage analysis                                                                                       |
+| What did three Claude Code users actually do, and which merged PRs prove it?                                                   |
+| Scope: 3 Claude Code users / 6 UserSubmitPrompt rows / 10 merged PRs / 3 repos                                                 |
+|                                                                                                                                |
+| Current user: Bob (repo operator)                                                                                              |
+| Current prompt: usp-2001 / ship merged proof                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------+
+
+===== select Bob prompt 2 =====
 PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
 Filter: repo=All   Pane=prompts   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
 +-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
@@ -150,6 +272,86 @@ Filter: repo=All   Pane=prompts   Mode=Report   Ready: arrows, tab, enter, m, f,
 | Current user: Bob (repo operator)                                                                                              |
 | Current prompt: usp-2002 / separate evidence from self-judgment                                                                |
 +--------------------------------------------------------------------------------------------------------------------------------+
+
+===== dive mode =====
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=prompts   Mode=Report   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | |   usp-2001 ship merged proof             | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | |   Continue until this is legally merged> | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |   signals merge-lifecycle / ci-watch / > | |   proves operator follow-through from p> |
+|                                      | |   merged PR evidence 2                   | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | > usp-2002 separate evidence from self-> | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | |   Do not let the code judge itself. Dum> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |   signals third-party-judge / raw-json > | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | |   merged PR evidence 1                   | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | |                                          | |                                          |
+|   focus metrix-plugin, Paperclip     | |                                          | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |                                          | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |                                          | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| feature-02: Proof console usage analysis                                                                                       |
+| What did three Claude Code users actually do, and which merged PRs prove it?                                                   |
+| Scope: 3 Claude Code users / 6 UserSubmitPrompt rows / 10 merged PRs / 3 repos                                                 |
+|                                                                                                                                |
+| Current user: Bob (repo operator)                                                                                              |
+| Current prompt: usp-2002 / separate evidence from self-judgment                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=prompts   Mode=Dive   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | |   usp-2001 ship merged proof             | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | |   Continue until this is legally merged> | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |   signals merge-lifecycle / ci-watch / > | |   proves operator follow-through from p> |
+|                                      | |   merged PR evidence 2                   | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | > usp-2002 separate evidence from self-> | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | |   Do not let the code judge itself. Dum> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |   signals third-party-judge / raw-json > | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | |   merged PR evidence 1                   | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | |                                          | |                                          |
+|   focus metrix-plugin, Paperclip     | |                                          | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |                                          | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |                                          | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| Dive path                                                                                                                      |
+| Bob -> usp-2002 -> 1 merged PR evidence rows                                                                                   |
+|                                                                                                                                |
+| UserSubmitPrompt                                                                                                               |
+| Do not let the code judge itself. Dump raw JSON and let a blank-brain judge read it.                                           |
+|                                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+
+===== prompt detail =====
 PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
 Filter: repo=All   Pane=prompts   Mode=Dive   Ready: arrows, tab, enter, m, f, r, h, q.
 +-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
@@ -226,6 +428,86 @@ Filter: repo=All   Pane=prompts   Mode=Dive   Ready: arrows, tab, enter, m, f, r
 | Do not let the code judge itself. Dump raw JSON and let a blank-brain judge read it.                                           |
 |                                                                                                                                |
 +--------------------------------------------------------------------------------------------------------------------------------+
+
+===== map mode =====
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=prompts   Mode=Dive   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | | Prompt detail                            | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | | usp-2002  2026-05-13T18:21:40+08:00      | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |                                          | |   proves operator follow-through from p> |
+|                                      | | Do not let the code judge itself. Dump > | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | Outcome                                  | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | | Moved verification wording toward fixed> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |                                          | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | | Merged PRs                               | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | | TeamBrain #325: Isolate verdict judge f> | |                                          |
+|   focus metrix-plugin, Paperclip     | |   merged_at: 2026-05-11T14:36:19Z        | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |   impact: prevents proof console from s> | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |   evidence: judge.json, blank plugin di> | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| Dive path                                                                                                                      |
+| Bob -> usp-2002 -> 1 merged PR evidence rows                                                                                   |
+|                                                                                                                                |
+| UserSubmitPrompt                                                                                                               |
+| Do not let the code judge itself. Dump raw JSON and let a blank-brain judge read it.                                           |
+|                                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=All   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
+|   Alice plugin maintainer            | | Prompt detail                            | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | | usp-2002  2026-05-13T18:21:40+08:00      | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |                                          | |   proves operator follow-through from p> |
+|                                      | | Do not let the code judge itself. Dump > | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | Outcome                                  | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | | Moved verification wording toward fixed> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |                                          | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | | Merged PRs                               | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | | TeamBrain #325: Isolate verdict judge f> | |                                          |
+|   focus metrix-plugin, Paperclip     | |   merged_at: 2026-05-11T14:36:19Z        | | Paperclip #41 Preserve remote launch pr> |
+|                                      | |   impact: prevents proof console from s> | |   by Bob   merged 2026-05-12   PC-041    |
+|                                      | |   evidence: judge.json, blank plugin di> | |   shows prompt-driven launch proof beyo> |
+|                                      | |                                          | |   evidence ssh tunnel / health check / > |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| Usage map                                                                                                                      |
+| 3 users  6 prompts  10 merged PRs                                                                                              |
+|                                                                                                                                |
+| Repo proof coverage                                                                                                            |
+| TeamBrain 4 / metrix-plugin 4 / Paperclip 2                                                                                    |
+|                                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+
+===== repo filter TeamBrain =====
 PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
 Filter: repo=All   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m, f, r, h, q.
 +-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: All              --+
@@ -302,6 +584,86 @@ Filter: repo=TeamBrain   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m,
 | TeamBrain 4 / metrix-plugin 4 / Paperclip 2                                                                                    |
 |                                                                                                                                |
 +--------------------------------------------------------------------------------------------------------------------------------+
+
+===== repo filter metrix-plugin =====
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=TeamBrain   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: TeamBrain        --+
+|   Alice plugin maintainer            | | Prompt detail                            | | TeamBrain #323 Watch CI and complete pr> |
+|   prompts 2   merged PRs 3   repos 2 | | usp-2002  2026-05-13T18:21:40+08:00      | |   by Bob   merged 2026-05-11   TB-323    |
+|   focus TeamBrain, metrix-plugin     | |                                          | |   proves operator follow-through from p> |
+|                                      | | Do not let the code judge itself. Dump > | |   evidence green checks / merge state c> |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | Outcome                                  | | TeamBrain #325 Isolate verdict judge fr> |
+|   focus TeamBrain, Paperclip         | | Moved verification wording toward fixed> | |   by Bob   merged 2026-05-11   TB-325    |
+|                                      | |                                          | |   prevents proof console from self-cert> |
+|   Chen product reviewer              | | Merged PRs                               | |   evidence judge.json / blank plugin di> |
+|   prompts 2   merged PRs 4   repos 3 | | TeamBrain #325: Isolate verdict judge f> | |                                          |
+|   focus metrix-plugin, Paperclip     | |   merged_at: 2026-05-11T14:36:19Z        | |                                          |
+|                                      | |   impact: prevents proof console from s> | |                                          |
+|                                      | |   evidence: judge.json, blank plugin di> | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| Usage map                                                                                                                      |
+| 3 users  6 prompts  10 merged PRs                                                                                              |
+|                                                                                                                                |
+| Repo proof coverage                                                                                                            |
+| TeamBrain 4 / metrix-plugin 4 / Paperclip 2                                                                                    |
+|                                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
+Filter: repo=metrix-plugin   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m, f, r, h, q.
++-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: metrix-plugin    --+
+|   Alice plugin maintainer            | | Prompt detail                            | | No PRs for current filter.               |
+|   prompts 2   merged PRs 3   repos 2 | | usp-2002  2026-05-13T18:21:40+08:00      | |                                          |
+|   focus TeamBrain, metrix-plugin     | |                                          | |                                          |
+|                                      | | Do not let the code judge itself. Dump > | |                                          |
+| > Bob repo operator                  | |                                          | |                                          |
+|   prompts 2   merged PRs 3   repos 2 | | Outcome                                  | |                                          |
+|   focus TeamBrain, Paperclip         | | Moved verification wording toward fixed> | |                                          |
+|                                      | |                                          | |                                          |
+|   Chen product reviewer              | | Merged PRs                               | |                                          |
+|   prompts 2   merged PRs 4   repos 3 | | TeamBrain #325: Isolate verdict judge f> | |                                          |
+|   focus metrix-plugin, Paperclip     | |   merged_at: 2026-05-11T14:36:19Z        | |                                          |
+|                                      | |   impact: prevents proof console from s> | |                                          |
+|                                      | |   evidence: judge.json, blank plugin di> | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
+|                                      | |                                          | |                                          |
++--------------------------------------+ +------------------------------------------+ +------------------------------------------+
++-- Analysis                                                                                                                   --+
+| Usage map                                                                                                                      |
+| 3 users  6 prompts  10 merged PRs                                                                                              |
+|                                                                                                                                |
+| Repo proof coverage                                                                                                            |
+| TeamBrain 4 / metrix-plugin 4 / Paperclip 2                                                                                    |
+|                                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------+
+
+===== help and data contract =====
 PROOF CONSOLE TUI  feature-02  2026-05-16T12:00:00+08:00  data=prototype-sample
 Filter: repo=metrix-plugin   Pane=prompts   Mode=Map   Ready: arrows, tab, enter, m, f, r, h, q.
 +-- Users                            --+ +-- UserSubmitPrompt                     --+ +-- Merged PR Evidence: metrix-plugin    --+

@@ -43,6 +43,10 @@ asciinema rec docs/proof-console-tui/proof-console-tui.cast \
   --overwrite
 ```
 
+The current walkthrough also includes `proof-console-tui.gif`, rendered from
+the cast with `agg`, and `proof-console-tui-transcript.txt`, captured from
+real tmux panes at each navigation step.
+
 ## Data Contract
 
 Replace `sample-data.json` with exported rows from the real pipeline:
