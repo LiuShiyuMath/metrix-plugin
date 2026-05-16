@@ -47,8 +47,8 @@
     {
       "name": "teamagent-team-sync",
       "source": "./plugins/teamagent-team-sync",
-      "description": "Publish project rules to the team, resolve rule conflicts across machines, and promote local rule cards to shared team rules via SessionStart and UserPromptSubmit hooks.",
-      "version": "0.1.0",
+      "description": "Sync a team's whole Claude Code setup. Publish/promote/conflict-resolve rule cards across machines (idempotent SessionStart importer + resolved.jsonl markers), AND share the ~/.claude shareable surface as a secret-redacted public gist/repo a teammate copies and installs in one click via talk-html's interactive copy button.",
+      "version": "0.2.0",
       "category": "collaboration",
       "tags": [
         "collaboration",
@@ -56,7 +56,10 @@
         "team",
         "rules",
         "conflict-resolution",
-        "promotion"
+        "promotion",
+        "share-setup",
+        "one-click-install",
+        "talk-html"
       ]
     },
     {

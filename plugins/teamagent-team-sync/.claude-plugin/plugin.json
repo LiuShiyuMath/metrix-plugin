@@ -1,7 +1,7 @@
 {
   "name": "teamagent-team-sync",
-  "description": "Sync rule cards across a team: publish local rules to a shared store, resolve conflicts on import, promote project-local rules to team-wide.",
-  "version": "0.1.0",
+  "description": "Sync a team's Claude Code setup: publish/promote/conflict-resolve rule cards across machines, AND share the whole ~/.claude shareable surface as a secret-redacted public gist or repo that a teammate copies and installs in one click via talk-html's interactive copy button.",
+  "version": "0.2.0",
   "author": {
     "name": "libz-renlab-ai"
   },
@@ -14,6 +14,10 @@
     "hooks",
     "claude-code",
     "shared-memory",
-    "conflict-resolution"
+    "conflict-resolution",
+    "share-setup",
+    "one-click-install",
+    "talk-html",
+    "gist"
   ]
 }

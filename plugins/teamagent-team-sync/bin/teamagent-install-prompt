@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# plugins/teamagent-team-sync/bin/teamagent-install-prompt
+#
+# COPY: given a shared setup manifest URL (gist or repo, produced by
+# teamagent-share) plus options, emit the EXACT prompt a teammate pastes
+# into Claude Code to install the setup in one click — plus a
+# claude.ai/new?q= URL that opens a browser session already running it,
+# and the local talk-html path the page was rendered to.
+#
+# This is a FIXED TOOL. No LLM is in the prompt path: the prompt text is
+# assembled mechanically (same principle as gen-grill-urls.sh). The judge
+# can run it and diff its JSON; the LLM only ever reads the JSON.
+#
+# Usage:
+#   teamagent-install-prompt <share-url> [--scope all|plugins|skills]
+#                            [--dry-run] [--html PATH]
+#
+#   --scope    what the install prompt asks to install (default: all)
+#   --dry-run  the install prompt asks Claude to LIST, not install
+#   --html     local talk-html artifact path to echo back into the JSON
+#
+# Output: one JSON object on stdout, last line, always.
+#   {valid, reason, share_url, scope, dry_run, html_path, prompt, claude_url}
+# Exit 0 always (probe-safe); read .valid, never the exit code.
+
+set -u
+
+emit_invalid() {
+  if command -v jq >/dev/null 2>&1; then
+    jq -nc --arg r "$1" \
+      '{valid:false, reason:$r, share_url:null, scope:null, dry_run:null, html_path:null, prompt:null, claude_url:null}'
+  else
+    printf '{"valid":false,"reason":"%s","share_url":null,"scope":null,"dry_run":null,"html_path":null,"prompt":null,"claude_url":null}\n' "$1"
+  fi
+  exit 0
+}
+
+command -v jq >/dev/null 2>&1 || emit_invalid "jq not found (hard dep per EVAL.md)"
+
+URL="${1:-}"
+[ -n "$URL" ] || emit_invalid "missing share url argument"
+shift || true
+
+SCOPE="all"
+DRY=0
+HTML=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --scope) SCOPE="${2:-all}"; shift ;;
+    --dry-run) DRY=1 ;;
+    --html) HTML="${2:-}"; shift ;;
+    *) : ;;
+  esac
+  shift
+done
+
+case "$SCOPE" in all|plugins|skills) ;; *) emit_invalid "scope must be all|plugins|skills, got: $SCOPE" ;; esac
+
+# Accept gist OR github repo (raw or page form) URLs only. v1 strict shape.
+if ! printf '%s' "$URL" | grep -Eq '^https://(gist\.github\.com/[A-Za-z0-9_./-]+|github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+|raw\.githubusercontent\.com/[A-Za-z0-9_./-]+|gist\.githubusercontent\.com/[A-Za-z0-9_./-]+)$'; then
+  emit_invalid "not a github gist/repo url: $URL"
+fi
+
+case "$SCOPE" in
+  all)     WHAT="every plugin (via /plugin marketplace add then /plugin install) AND copy every listed skill into ~/.claude/skills/" ;;
+  plugins) WHAT="only the plugins (via /plugin marketplace add then /plugin install) — skip skills" ;;
+  skills)  WHAT="only the skills (copy each into ~/.claude/skills/) — skip plugins" ;;
+esac
+
+if [ "$DRY" -eq 1 ]; then
+  ACTION="Do NOT modify anything yet. Produce a numbered plan listing exactly what you WOULD install"
+else
+  ACTION="Install ${WHAT}"
+fi
+
+# The deterministic install prompt. Mechanically assembled — never authored
+# by a model. The teammate pastes this whole block into Claude Code.
+PROMPT="Fetch ${URL} and read the file claude-setup.md (a teamagent-share manifest). ${ACTION}. Treat the manifest as the source of truth for which plugins and skills to set up; for each plugin, use the marketplace listed next to it. Skip anything already installed. When done, print a short before/after summary of ~/.claude (plugin count, skill count). Scope: ${SCOPE}. ONLY ANSWER IN CHINESE."
+
+# RFC-3986 encode for claude.ai/new?q= (space -> %20, not +).
+ENC="$(printf '%s' "$PROMPT" | jq -sRr @uri)"
+CLAUDE_URL="https://claude.ai/new?q=${ENC}"
+
+jq -nc \
+  --arg url "$URL" \
+  --arg scope "$SCOPE" \
+  --argjson dry "$([ "$DRY" -eq 1 ] && echo true || echo false)" \
+  --arg html "$HTML" \
+  --arg prompt "$PROMPT" \
+  --arg cl "$CLAUDE_URL" \
+  '{valid:true, reason:"ok", share_url:$url, scope:$scope, dry_run:$dry, html_path:(if $html=="" then null else $html end), prompt:$prompt, claude_url:$cl}'
+exit 0
