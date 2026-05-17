@@ -69,3 +69,19 @@ The console should not claim proof when no merged PR row exists.
 
 `--html <path>` writes a static design preview only. It is not the
 reporting surface.
+
+## Dashboard
+
+`--dashboard <path>` writes a single self-contained interactive
+analytics dashboard for humans (not the TUI, not the static preview):
+
+```sh
+node docs/proof-console-tui/proof-console-tui.mjs --dashboard out.html
+```
+
+It renders from the same data contract: 5 KPI cards, linked
+user/repo/signal filters, four Chart.js charts (PR-per-repo,
+prompts-per-user, top signals, cumulative merge timeline), and a
+sortable evidence table. Only merged PR rows count as proof. This
+is an additive exit; the `--html` static-preview contract above is
+unchanged.
