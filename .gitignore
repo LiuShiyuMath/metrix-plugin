@@ -6,3 +6,4 @@ node_modules/
 .judge/
 nohup.out
 .claude/
+.gstack/
