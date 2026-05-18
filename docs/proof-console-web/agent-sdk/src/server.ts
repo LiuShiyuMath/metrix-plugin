@@ -39,6 +39,8 @@ const BASE_URL = process.env.ANTHROPIC_BASE_URL ?? "(default anthropic)";
 const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB ?? 1024);
 const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+const ANALYZE_TIMEOUT_MS = Number(process.env.ANALYZE_TIMEOUT_MS ?? 300000);
+const MAX_TURNS = Number(process.env.MAX_TURNS ?? 30);
 
 type JobRequest = Request & { jobId?: string; jobDir?: string };
 
@@ -111,16 +113,23 @@ app.post(
       model: MODEL,
     });
 
+    const bigMB = (file.size / 1048576).toFixed(1);
     const prompt = [
-      `A user dropped a file named "${safeName}" (${file.size} bytes) into your working directory.`,
+      `A user dropped a file named "${safeName}" (${file.size} bytes, ${bigMB} MB) into your working directory.`,
       `You do not know its format in advance — figure it out yourself.`,
       ``,
+      `You have a STRICT budget: ~${Math.round(ANALYZE_TIMEOUT_MS / 1000)}s wall clock and ${MAX_TURNS} turns.`,
+      `If the file is large, SAMPLE — never try to read or scan it whole. Use`,
+      `\`file\`, \`head\`, \`tail\`, \`wc -l\`, \`unzip -l\`, random line samples, \`sqlite3 .schema\`.`,
+      `Do not loop re-scanning the same content; one good pass beats ten partial ones.`,
+      ``,
       `Do this:`,
-      `1. Inspect the file using whatever tools fit (Read, Bash for \`file\`/\`head\`/\`unzip -l\`/\`sqlite3\`, Grep, etc.).`,
-      `2. Determine what it is, what it contains, and anything notable, risky, or interesting.`,
-      `3. Write a self-contained interactive report to "report.html" in the current directory:`,
-      `   dark theme, no external network/CDN assets, a summary up top, then the evidence`,
-      `   you actually observed (real samples/stats from the file — never invented).`,
+      `1. Identify what it is (format, structure, size).`,
+      `2. Pull representative samples + aggregate stats; note anything notable/risky.`,
+      `3. ALWAYS write a self-contained "report.html" in the current directory BEFORE you`,
+      `   finish — dark theme, no external/CDN assets, summary on top, then the real`,
+      `   evidence you observed (real samples/stats — never invented). A partial report`,
+      `   is mandatory; running out of budget with no report.html is a failure.`,
       `4. End your final text message with a 3-5 line plain-text executive summary.`,
       ``,
       `Be concise in chat; put the depth in report.html.`,
@@ -128,6 +137,11 @@ app.post(
 
     const abort = new AbortController();
     req.on("close", () => abort.abort());
+    let timedOut = false;
+    const killer = setTimeout(() => {
+      timedOut = true;
+      abort.abort();
+    }, ANALYZE_TIMEOUT_MS);
 
     try {
       const run = query({
@@ -141,7 +155,7 @@ app.post(
           allowDangerouslySkipPermissions: true,
           allowedTools: ["Read", "Glob", "Grep", "Bash", "Write", "Edit"],
           abortController: abort,
-          maxTurns: 40,
+          maxTurns: MAX_TURNS,
         },
       });
 
@@ -173,8 +187,26 @@ app.post(
         }
       }
     } catch (err) {
-      send(res, { type: "error", message: err instanceof Error ? err.message : String(err) });
+      if (timedOut) {
+        // Always give the client closure: ship whatever report.html exists.
+        const reportPath = path.join(jobDir, "report.html");
+        const report = existsSync(reportPath) ? readFileSync(reportPath, "utf8") : null;
+        send(res, {
+          type: "result",
+          subtype: "timeout",
+          isError: true,
+          durationMs: ANALYZE_TIMEOUT_MS,
+          costUsd: null,
+          summary: `分析超时（${Math.round(ANALYZE_TIMEOUT_MS / 1000)}s）。${
+            report ? "已附上 Agent 在超时前写出的部分报告。" : "Agent 未能在超时前写出报告。"
+          } 可加大 ANALYZE_TIMEOUT_MS 重试。`,
+          report,
+        });
+      } else {
+        send(res, { type: "error", message: err instanceof Error ? err.message : String(err) });
+      }
     } finally {
+      clearTimeout(killer);
       res.end();
       // report.html was already inlined into the result event; drop the job dir.
       await rm(jobDir, { recursive: true, force: true }).catch(() => {});
