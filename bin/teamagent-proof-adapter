@@ -103,6 +103,18 @@ function promptsForCoder(home) {
       });
     }
   }
+  if (!rows.length) {
+    // proof-console-tui crashes on a user with zero prompts; emit one
+    // honest "no activity yet" row until the real hooks fire.
+    rows.push({
+      id: "usp-wait", timestamp: new Date().toISOString(),
+      intent: "尚无活动",
+      text: "等待这个真实 claude 会话产出 hook 事件（capture / block / pass）",
+      signals: ["waiting"],
+      outcome: "（还没有捕获、拦截或放行）",
+      linked_prs: []
+    });
+  }
   return rows;
 }
 
@@ -124,7 +136,7 @@ const out = {
       "3 个真实交互 claude coder 经 teamagent-team-sync 同步后，" +
       "CEO 在 proof-console 看到的同一份真相是什么？"
   },
-  users: users.length ? users : [{ id: "u-none", name: "(no coders yet)", role: "", repo_focus: [], prompts: [] }],
+  users: users.length ? users : [{ id: "u-none", name: "(no coders yet)", role: "", repo_focus: [], prompts: [{ id: "usp-wait", timestamp: new Date().toISOString(), intent: "尚无活动", text: "等待真实 claude coder", signals: ["waiting"], outcome: "", linked_prs: [] }] }],
   prs
 };
 
