@@ -76,7 +76,7 @@ const fileinfo = document.getElementById('fileinfo');
 let busy = false;
 
 fetch('/health').then(r => r.json()).then(h => {
-  meta.textContent = `model=${h.model} · baseURL=${h.baseUrl} · apiKey=${h.hasKey ? 'set' : 'MISSING'}`;
+  meta.textContent = `model=${h.model} · baseURL=${h.baseUrl} · apiKey=${h.hasKey ? 'set' : 'MISSING'} · max=${h.maxUploadMB}MB`;
 }).catch(() => meta.textContent = 'health 检查失败');
 
 function line(type, text) {
@@ -121,8 +121,15 @@ async function analyze(file) {
     return;
   }
   if (!res.ok) {
-    const t = await res.text();
-    line('error', `HTTP ${res.status}: ${t}`);
+    let msg;
+    try {
+      const j = await res.json();
+      msg = j.error + (j.code ? ` [${j.code}]` : '');
+    } catch {
+      msg = `HTTP ${res.status}`;
+    }
+    line('error', msg);
+    report.innerHTML = `<div class="empty">上传失败：${msg}</div>`;
     busy = false;
     return;
   }
@@ -171,6 +178,7 @@ function render(ev) {
     }
   } else if (ev.type === 'error') {
     line('error', ev.message);
+    report.innerHTML = `<div class="empty">分析出错：${ev.message}</div>`;
   }
 }
 </script>

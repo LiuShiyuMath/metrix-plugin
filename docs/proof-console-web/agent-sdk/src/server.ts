@@ -18,11 +18,11 @@
  * ANTHROPIC_MODEL). run.sh injects the MiniMax values; nothing is read from or
  * written to disk by this process.
  */
-import express, { type Request, type Response } from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,17 +37,40 @@ const PORT = Number(process.env.PORT ?? 8920);
 const MODEL = process.env.ANTHROPIC_MODEL ?? "MiniMax-M2.7-highspeed";
 const BASE_URL = process.env.ANTHROPIC_BASE_URL ?? "(default anthropic)";
 const HAS_KEY = Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB ?? 1024);
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
+type JobRequest = Request & { jobId?: string; jobDir?: string };
+
+// Disk storage: big log archives stream straight to the per-job dir instead of
+// being buffered whole in RAM. jobId/jobDir are minted here, before the handler.
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  storage: multer.diskStorage({
+    destination(req, _file, cb) {
+      const jr = req as JobRequest;
+      const jobId = randomUUID();
+      const jobDir = path.join(WORKSPACE, jobId);
+      jr.jobId = jobId;
+      jr.jobDir = jobDir;
+      mkdir(jobDir, { recursive: true }).then(
+        () => cb(null, jobDir),
+        (e: unknown) => cb(e instanceof Error ? e : new Error(String(e)), ""),
+      );
+    },
+    filename(_req, file, cb) {
+      const safe =
+        path.basename(file.originalname).replace(/[^\w.\-]+/g, "_") || "upload.bin";
+      cb(null, safe);
+    },
+  }),
+  limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 },
 });
 
 const app = express();
 app.use(express.static(PUBLIC_DIR));
 
 app.get("/health", (_req: Request, res: Response) => {
-  res.json({ ok: true, model: MODEL, baseUrl: BASE_URL, hasKey: HAS_KEY });
+  res.json({ ok: true, model: MODEL, baseUrl: BASE_URL, hasKey: HAS_KEY, maxUploadMB: MAX_UPLOAD_MB });
 });
 
 /** One NDJSON event per line so the browser can read it incrementally. */
@@ -59,8 +82,9 @@ app.post(
   "/analyze",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
+    const jr = req as JobRequest;
     const file = req.file;
-    if (!file) {
+    if (!file || !jr.jobDir) {
       res.status(400).json({ error: "no file uploaded (field name must be 'file')" });
       return;
     }
@@ -71,14 +95,8 @@ app.post(
       return;
     }
 
-    const jobId = randomUUID();
-    const jobDir = path.join(WORKSPACE, jobId);
-    // multer/express may not preserve unicode names; keep a safe basename.
-    const safeName = path.basename(file.originalname).replace(/[^\w.\-]+/g, "_") || "upload.bin";
-    const filePath = path.join(jobDir, safeName);
-
-    await mkdir(jobDir, { recursive: true });
-    await writeFile(filePath, file.buffer);
+    const jobDir = jr.jobDir;
+    const safeName = file.filename; // already sanitized by the storage engine
 
     res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
@@ -87,7 +105,7 @@ app.post(
     send(res, {
       type: "status",
       stage: "received",
-      jobId,
+      jobId: jr.jobId,
       file: safeName,
       bytes: file.size,
       model: MODEL,
@@ -163,6 +181,30 @@ app.post(
     }
   },
 );
+
+// Multer (and any pre-handler) errors land here as clean JSON instead of
+// Express's default HTML stack-trace page. The browser parses {error,code}.
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  const jr = req as JobRequest;
+  if (jr.jobDir) void rm(jr.jobDir, { recursive: true, force: true }).catch(() => {});
+  if (res.headersSent) {
+    res.end();
+    return;
+  }
+  if (err instanceof multer.MulterError) {
+    const tooBig = err.code === "LIMIT_FILE_SIZE";
+    res.status(tooBig ? 413 : 400).json({
+      error: tooBig
+        ? `文件超过上限 ${MAX_UPLOAD_MB} MB。提高上限：MAX_UPLOAD_MB=4096 ./run.sh`
+        : `上传错误：${err.message}`,
+      code: err.code,
+    });
+    return;
+  }
+  res
+    .status(500)
+    .json({ error: err instanceof Error ? err.message : String(err), code: "INTERNAL" });
+});
 
 // Clear any job dirs orphaned by a previous crash before accepting traffic.
 await rm(WORKSPACE, { recursive: true, force: true }).catch(() => {});
