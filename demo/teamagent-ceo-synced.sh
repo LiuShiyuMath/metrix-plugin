@@ -93,13 +93,12 @@ send() {
 # store, both plugins loaded.
 launch_coder() {
   local pane="$1" lower="$2"
-  send "$pane" "PS1='\$ '; clear; export HOME='$BASE/$lower'; export CLAUDE_HOME='$BASE/$lower/.claude'; export PATH='$NODE_DIR':\"\$PATH\"; export TEAMAGENT_TEAM_STORE='$TEAM_STORE'; mkdir -p \"\$HOME\" \"\$CLAUDE_HOME\"; $CF_ENV; cd '$ROOT'; echo '$lower : real interactive claude · memory+team-sync'"
+  # Pre-seed the theme + onboarding markers so claude's first-run
+  # "Choose the text style" picker never appears (that picker ate the
+  # task prompt in the prior run). claude reads ~/.claude/settings.json.
+  send "$pane" "PS1='\$ '; clear; export HOME='$BASE/$lower'; export CLAUDE_HOME='$BASE/$lower/.claude'; export PATH='$NODE_DIR':\"\$PATH\"; export TEAMAGENT_TEAM_STORE='$TEAM_STORE'; mkdir -p \"\$HOME\" \"\$CLAUDE_HOME\"; printf '%s' '{\"theme\":\"dark\"}' > \"\$CLAUDE_HOME/settings.json\"; printf '%s' '{\"hasCompletedOnboarding\":true,\"theme\":\"dark\"}' > \"\$HOME/.claude.json\"; $CF_ENV; cd '$ROOT'; echo '$lower : real interactive claude · memory+team-sync'"
   sleep 1.0
   send "$pane" "claude --dangerously-skip-permissions --add-dir '$ROOT' --plugin-dir '$MEM' --plugin-dir '$SYNC'"
-  # A brand-new isolated HOME may show a one-time theme/welcome prompt;
-  # accept the default so the task prompt lands in the real input box.
-  sleep 7
-  tmux send-keys -t "$pane" Enter
 }
 
 (
@@ -109,9 +108,11 @@ launch_coder() {
 
   # --- Alice: real claude, gets corrected; Stop hook captures rule ---
   launch_coder "$P1" alice
-  sleep 14
+  sleep 22                              # boot + connectivity check
+  tmux send-keys -t "$P1" Enter         # clear any residual "press enter"
+  sleep 2
   send "$P1" "Add a tiny date-format helper to a new file scratch/date.js. Important correction: don't use moment, use dayjs. Keep it to a few lines."
-  sleep 70   # real model turn + Stop-hook capture
+  sleep 75   # real model turn + Stop-hook capture
 
   # team-sync publish: push Alice's captured rule into the shared store.
   if [ -s "$BASE/alice/.teamagent/rules.jsonl" ]; then
@@ -122,13 +123,17 @@ launch_coder() {
 
   # --- Bob: real claude; SessionStart sync pulls rule; repeat DENIED ---
   launch_coder "$P2" bob
-  sleep 16   # boot + teamagent-team-sync SessionStart pull
+  sleep 20   # boot + teamagent-team-sync SessionStart pull
+  tmux send-keys -t "$P2" Enter
+  sleep 2
   send "$P2" "Run exactly this in bash, nothing else: npm install moment"
-  sleep 60
+  sleep 65
 
   # --- Carol: real claude; corrected command passes (control) ---
   launch_coder "$P3" carol
-  sleep 16
+  sleep 20
+  tmux send-keys -t "$P3" Enter
+  sleep 2
   send "$P3" "Run exactly this in bash, nothing else: npm install dayjs"
   sleep 55
 
