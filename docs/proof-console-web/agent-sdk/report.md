@@ -37,6 +37,19 @@
 - iframe sandbox 由 `allow-same-origin` 改为 `allow-scripts`（隔离不串父页）。
 - 加了 per-job workspace 清理 + 启动 orphan sweep。
 
+## 用户实测发现的 bug 及修复（均已 live 复跑验证）
+
+1. **上传 81MB zip → HTTP 500 "File too large"**（multer 硬编码 25MB + 默认 HTML 堆栈页）
+   - 修：`memoryStorage(25MB)` → `diskStorage`、`MAX_UPLOAD_MB`（默认 1024）、
+     express 错误中间件返回干净 JSON（413/400）、UI 解析 JSON 错误并重置卡住的面板。
+   - 验证：上传 43,914,630 字节（41.9MB）zip → `stage:received`（修复前必 500）。
+2. **大/病态文件上 Agent 跑过客户端超时、无终止事件 → UI 永久卡"分析中"**
+   - 修：`ANALYZE_TIMEOUT_MS`（默认 300s）到点 abort 并下发终止
+     `result(subtype=timeout)`（带已写出的部分报告）；prompt 加预算/采样约束；
+     `MAX_TURNS` 默认 30。
+   - 验证：90s 超时跑 41.9MB zip → curl 94s 返回（非挂死）、终止事件
+     `{"type":"result","subtype":"timeout","isError":true,"durationMs":90000}`。
+
 ## 后续可选项（非阻断）
 
 - `dev` 脚本可换 watch 模式（`tsx watch`），目前一次性 build+run。
