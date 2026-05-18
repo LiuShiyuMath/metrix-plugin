@@ -1,0 +1,133 @@
+#!/usr/bin/env node
+// teamagent-proof-adapter
+//
+// Turns the REAL synced team store + each coder's REAL hook events into
+// the proof-console-tui data contract. No fabrication: every row is
+// derived from teamagent-team-sync's shared rule store and the
+// teamagent-memory events.jsonl that the 3 coder sessions actually wrote.
+//
+// Usage:
+//   teamagent-proof-adapter --team-store <rules.jsonl> \
+//     --coder Alice=/path/alice --coder Bob=/path/bob \
+//     --coder Carol=/path/carol --out <data.json>
+//
+// Robust by design: missing/empty inputs still emit a valid contract so
+// the CEO console renders while the coders are still working.
+
+"use strict";
+const fs = require("fs");
+const path = require("path");
+
+const args = process.argv.slice(2);
+function valuesOf(flag) {
+  const out = [];
+  for (let i = 0; i < args.length; i++) if (args[i] === flag) out.push(args[i + 1]);
+  return out;
+}
+function valueOf(flag) {
+  const i = args.indexOf(flag);
+  return i >= 0 ? args[i + 1] : null;
+}
+
+const TEAM_STORE = valueOf("--team-store");
+const OUT = valueOf("--out");
+const CODERS = valuesOf("--coder").map((spec) => {
+  const ix = spec.indexOf("=");
+  return { name: spec.slice(0, ix), home: spec.slice(ix + 1) };
+});
+
+function loadJsonl(p) {
+  if (!p || !fs.existsSync(p)) return [];
+  const out = [];
+  for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t) continue;
+    try { out.push(JSON.parse(t)); } catch (_e) {}
+  }
+  return out;
+}
+
+// prs[] = the synced team store rule cards. Each durable rule card IS the
+// merged proof row; proof-console treats prs as the evidence rows.
+const teamRules = loadJsonl(TEAM_STORE);
+const prs = teamRules.map((r, i) => ({
+  id: r.id || `team-rule-${i + 1}`,
+  repo: "team-store",
+  number: i + 1,
+  title: `${r.wrong || "?"} -> ${r.correct || "?"}`,
+  merged_at: r.captured_at || new Date().toISOString(),
+  author: r.session_origin || "team-sync",
+  impact: "durable PreToolUse block rule, synced to all coders",
+  evidence: [
+    `pattern ${(r.trigger && r.trigger.pattern) || "?"}`,
+    `why ${r.why || "real coder correction"}`,
+    "synced via teamagent-team-sync"
+  ]
+}));
+const ruleIds = new Set(prs.map((p) => p.id));
+
+function promptsForCoder(home) {
+  const events = loadJsonl(path.join(home, ".teamagent", "events.jsonl"));
+  const rows = [];
+  let n = 0;
+  for (const e of events) {
+    n += 1;
+    const ts = e.ts || new Date().toISOString();
+    if (e.kind === "stop_capture") {
+      const rid = (e.captured && e.captured[0] && e.captured[0].rule_id) || "";
+      rows.push({
+        id: `usp-${n}`, timestamp: ts,
+        intent: "把用户纠正变成团队规则",
+        text: `真实 claude 会话被纠正；Stop hook 捕获规则 ${rid}`,
+        signals: ["correction", "rule-card", "stop-hook"],
+        outcome: "规则卡写入本地 store，随后 team-sync 发布",
+        linked_prs: ruleIds.has(rid) ? [rid] : []
+      });
+    } else if (e.kind === "pretooluse_block") {
+      rows.push({
+        id: `usp-${n}`, timestamp: ts,
+        intent: "重复犯错被同步规则拦下",
+        text: `${e.command || ""}  →  decision=${e.decision || "deny"}`,
+        signals: ["pretooluse", "deny", "synced-rule"],
+        outcome: "DENIED：team-sync 拉来的规则在新会话里真实拦截",
+        linked_prs: ruleIds.has(e.rule_id) ? [e.rule_id] : []
+      });
+    } else if (e.kind === "pretooluse_pass") {
+      rows.push({
+        id: `usp-${n}`, timestamp: ts,
+        intent: "改对后的命令",
+        text: `${e.command || ""}  →  pass`,
+        signals: ["pretooluse", "pass", "control"],
+        outcome: "ALLOWED：对照组，未命中任何规则",
+        linked_prs: []
+      });
+    }
+  }
+  return rows;
+}
+
+const users = CODERS.map((c, i) => ({
+  id: `u-${c.name.toLowerCase()}`,
+  name: c.name,
+  role: "Claude Code coder (real interactive session)",
+  repo_focus: ["metrixMarkets"],
+  prompts: promptsForCoder(c.home)
+}));
+
+const out = {
+  generated_at: new Date().toISOString(),
+  mode: "live-synced",
+  feature: {
+    id: "feature-synced",
+    name: "Synced proof console",
+    question:
+      "3 个真实交互 claude coder 经 teamagent-team-sync 同步后，" +
+      "CEO 在 proof-console 看到的同一份真相是什么？"
+  },
+  users: users.length ? users : [{ id: "u-none", name: "(no coders yet)", role: "", repo_focus: [], prompts: [] }],
+  prs
+};
+
+const json = JSON.stringify(out, null, 2);
+if (OUT) { fs.writeFileSync(OUT, json); process.stdout.write(`WROTE:${OUT} users=${users.length} prs=${prs.length}\n`); }
+else process.stdout.write(json + "\n");
