@@ -26,6 +26,21 @@ Codex / Claude Code), then a PR is opened.
 - "implement this issue", "handoff", "make the PR plan", "开始实现",
   "把 grill 的结论落地".
 
+## Stage gate (FORCED) — do this first
+
+Before reading the issue or distilling anything, clear the gate for
+**this** stage (`handoff`):
+
+```
+bash "${CLAUDE_PLUGIN_ROOT}/bin/workflow-gate.sh" "<issue-url>" handoff
+```
+
+If `allowed:false`, print `reason` **verbatim** and **stop** — do not
+`gh issue view`, do not write a brief, do not append a `handoff` line.
+If `valid:false`, print `reason` verbatim and stop. Continue only on
+`allowed:true`. (Not-enabled ⇒ `enforced:false, allowed:true` ⇒ proceed
+normally.)
+
 ## Steps
 
 1. **Fetch the grilled discussion.** Use `gh issue view <n> --repo
@@ -48,6 +63,9 @@ Codex / Claude Code), then a PR is opened.
 
 ## Hard rules
 
+- `workflow-gate.sh` gates this stage. A `handoff` brief is never
+  written when the gate said `allowed:false` — print its `reason`
+  verbatim and stop.
 - Do not fabricate grill conclusions. If the issue has no pasted grill
   results, stop and say so — the workflow is out of order.
 - The acceptance criterion in the brief must be externally verifiable

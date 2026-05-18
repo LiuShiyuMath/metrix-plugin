@@ -26,6 +26,21 @@ not by the model — this is what makes the handoff auditable.
 - "generate grill URLs", "chatgpt link for issue N", "claude.ai 链接",
   "grill 这个 issue".
 
+## Stage gate (FORCED) — do this first
+
+Before generating anything, clear the gate for **this** stage
+(`grilled`):
+
+```
+bash "${CLAUDE_PLUGIN_ROOT}/bin/workflow-gate.sh" "<issue-url>" grilled
+```
+
+If `allowed:false`, print `reason` **verbatim** and **stop** — do not
+run `gen-grill-urls.sh`, do not append a `grilled` line. If
+`valid:false`, print `reason` verbatim and stop. Continue only on
+`allowed:true`. (Not-enabled ⇒ `enforced:false, allowed:true` ⇒ proceed
+normally.)
+
 ## Steps
 
 1. **Resolve the issue URL.** From the command argument, or the most
@@ -52,6 +67,9 @@ not by the model — this is what makes the handoff auditable.
 
 ## Hard rules
 
+- `workflow-gate.sh` runs before `gen-grill-urls.sh`. If it says
+  `allowed:false`, no URL is generated and no `grilled` line is written
+  — print its `reason` verbatim and stop.
 - The URLs MUST come from `gen-grill-urls.sh`. Never construct or
   "tweak" a `chatgpt.com` / `claude.ai` URL by hand — the whole point is
   a deterministic, judge-verifiable artifact.

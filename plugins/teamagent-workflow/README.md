@@ -58,6 +58,53 @@ Three decisions, confirmed on the approved status page:
   regenerate the grill URLs for an already-claimed issue.
 - `/teamagent-workflow:workflow-proof <pr-url> <proof-url...>` — Stage 4:
   write the proof links back to the PR.
+- `/teamagent-workflow:workflow-enable [on|off|status]` — flip the FORCED
+  gate (see below). Default `status`.
+
+## FORCED workflow (opt-in gate)
+
+In v0 the four arrows above were **decorative**. Nothing stopped you
+from claiming an issue and immediately posting a proof — the skills only
+*asked* the model politely to stop. For a plugin whose whole job is
+handing evidence to a human for approval, "all on the honour system" is
+the one place it must not be.
+
+`bin/workflow-gate.sh` makes a **tool**, not the model, decide whether a
+stage transition is legal. Given an issue URL and a target stage it
+rebuilds the issue's current stage from the append-only state file and
+answers one JSON object. The entire policy is one line:
+
+```
+allowed = (requested == current) OR (requested == current + 1)
+          stages: claimed=1 · grilled=2 · handoff=3 · proof=4
+```
+
+That single line closes three illegal moves with no extra branches —
+**skipping** (claim → proof), **starting mid-pipeline** (grill before
+claim), and **going backward** (re-grill after proof). Re-running the
+current stage (`requested == current`) is the only permitted non-advance
+and is idempotent.
+
+It is **opt-in by design**: until you run
+`/teamagent-workflow:workflow-enable on` the gate returns
+`enforced:false, allowed:true` and the plugin is byte-for-byte its old
+self. `workflow-enable` (via the fixed `bin/workflow-forced.sh`) flips
+`~/.teamagent/forced.enabled` and records a `forced_enabled` /
+`forced_disabled` audit line. Once enabled, all four stage skills must
+clear `workflow-gate.sh` before doing anything; `allowed:false` ⇒ they
+print `reason` verbatim and stop — no state line, no `gh pr comment`, no
+fabricated brief.
+
+```
+  claim ──▣──▶ grill ──▣──▶ handoff ──▣──▶ proof        ▣ = workflow-gate.sh
+    ▲                                        │
+    └──────── BLOCKED: backward ◀────────────┘
+    └──────── BLOCKED: skip ahead ───────────┘   (when forced workflow enabled)
+```
+
+The gate guarantees **order**, never **content quality** — whether the
+grill was good or the proof links are real is still a human's call on
+the PR. Approval stays a human action; the gate never writes `approved`.
 
 ## State file
 
@@ -71,9 +118,11 @@ transition. Same store directory as `teamagent-memory`'s
  "pr_url":null,"proof_urls":[],"note":"claimed via /workflow-start"}
 ```
 
-`stage` ∈ `claimed | grilled | handoff | proof | approved`. The file is
-the single source of truth — every skill reconstructs context from it,
-never from chat memory.
+`stage` ∈ `claimed | grilled | handoff | proof | approved` (plus the
+gate's own audit markers `forced_enabled | forced_disabled`, which carry
+`issue_url:null` and are ignored when rebuilding an issue's stage). The
+file is the single source of truth — every skill reconstructs context
+from it, never from chat memory.
 
 ## Why `%20` not `+` for spaces
 
@@ -85,8 +134,9 @@ showed `+` for illustration; `%20` is the correct, portable realization.
 
 ## Verification
 
-This plugin ships a judge probe, `probes/workflow-checks.sh` (run by the
-repo's `bin/judge.sh`). It proves, with fixed tools and no self-eval:
+This plugin ships two judge probes, `probes/workflow-checks.sh` and
+`probes/workflow-gate-checks.sh` (both run by the repo's `bin/judge.sh`).
+They prove, with fixed tools and no self-eval:
 
 - marketplace lists **4** plugins (was 3) and every `plugin.json` is
   `jq -e`-valid;
@@ -94,6 +144,12 @@ repo's `bin/judge.sh`). It proves, with fixed tools and no self-eval:
   JSON across two runs;
 - a valid issue URL yields `valid:true` with both a `chatgpt.com` and a
   `claude.ai` URL; a PR URL and an empty arg yield `valid:false` and
-  exit 0 (probe-safe).
+  exit 0 (probe-safe);
+- against a mechanically-built isolated state file, `workflow-gate.sh`:
+  passes through (`enforced:false`) until enabled; once enabled lets only
+  `claimed` start an empty issue, allows the full ordered sequence,
+  blocks every skip and every backward jump, allows idempotent re-runs,
+  and returns `valid:false` for a bad stage or a non-issue URL — every
+  case exit 0.
 
 The LLM may read `judge.json` afterwards; it never authors the verdict.
