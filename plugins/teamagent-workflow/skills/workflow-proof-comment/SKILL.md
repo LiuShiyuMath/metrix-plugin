@@ -25,6 +25,23 @@ dry-run prints the comment body for manual paste.
 - `/teamagent-workflow:workflow-proof <pr-url> <proof-url…>`
 - "write proof back to PR", "post proof comment", "把证明写回 PR".
 
+## Stage gate (FORCED) — do this first
+
+Before building or posting anything, clear the gate for **this** stage
+(`proof`). The gate keys on the **issue** URL, so resolve the issue this
+PR implements (from `~/.teamagent/workflow.jsonl` or ask the user), then:
+
+```
+bash "${CLAUDE_PLUGIN_ROOT}/bin/workflow-gate.sh" "<issue-url>" proof
+```
+
+If `allowed:false`, print `reason` **verbatim** and **stop** — do not
+build the comment body, do not run `gh pr comment`, do not append a
+`proof` line. This is the case the whole FORCED design exists for:
+claim-then-jump-straight-to-proof is blocked here. If `valid:false`,
+print `reason` verbatim and stop. Continue only on `allowed:true`.
+(Not-enabled ⇒ `enforced:false, allowed:true` ⇒ proceed normally.)
+
 ## Steps
 
 1. **Collect inputs:** the PR URL (`https://github.com/<o>/<r>/pull/<n>`)
@@ -50,6 +67,11 @@ dry-run prints the comment body for manual paste.
 
 ## Hard rules
 
+- `workflow-gate.sh` runs before any comment is built. If forced
+  workflow is enabled and the issue is not at `handoff`, the gate says
+  `allowed:false` — no `gh pr comment`, no `proof` line. Print its
+  `reason` verbatim and stop. The gate guarantees ordering only; it
+  never implies the proof is approved.
 - Never post a proof comment with zero proof URLs.
 - Never write the word "approved" / "已批准" into the PR or the state
   file. The plugin delivers evidence to a human; it does not self-approve.

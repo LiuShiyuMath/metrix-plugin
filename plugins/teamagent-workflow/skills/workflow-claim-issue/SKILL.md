@@ -22,6 +22,21 @@ grill / implement / proof stages are reproducible.
 - The user pastes a `https://github.com/<owner>/<repo>/issues/<n>` URL
   and wants to begin the pipeline.
 
+## Stage gate (FORCED) — do this first
+
+Before writing anything, clear the gate for **this** stage (`claimed`):
+
+```
+bash "${CLAUDE_PLUGIN_ROOT}/bin/workflow-gate.sh" "<issue-url>" claimed
+```
+
+Read its single JSON object. If `allowed:false`, print `reason`
+**verbatim** and **stop** — do not `mkdir`, do not append a `claimed`
+line. If `valid:false` (bad / non-issue URL), print `reason` verbatim
+and stop. Only when `allowed:true` continue. When forced workflow is not
+enabled the gate returns `enforced:false, allowed:true`, so you simply
+proceed — it is never silently the reason you stop unless it says so.
+
 ## Steps
 
 1. **Validate the URL.** It MUST match
@@ -42,6 +57,9 @@ grill / implement / proof stages are reproducible.
 
 ## Hard rules
 
+- The `workflow-gate.sh` decision is binding. Never write a `claimed`
+  line when the gate said `allowed:false`, and never "re-interpret" its
+  `reason` — print it verbatim and stop.
 - Never invent an issue, an owner, or a number.
 - Never write a `claimed` line for a non-GitHub-issue URL.
 - The state line must be valid JSON on a single line (`jq -nc`).
