@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>proof-console-web · 拖任意文件给 Agent</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #0b0e14; color: #c9d1d9;
+  }
+  header { padding: 18px 24px; border-bottom: 1px solid #1c2230; }
+  header h1 { margin: 0; font-size: 16px; letter-spacing: .5px; }
+  header .meta { color: #6b7689; font-size: 12px; margin-top: 4px; }
+  main { display: grid; grid-template-columns: 360px 1fr; gap: 0; height: calc(100vh - 60px); }
+  .left { padding: 24px; border-right: 1px solid #1c2230; overflow: auto; }
+  .right { display: flex; flex-direction: column; min-width: 0; }
+  #drop {
+    border: 2px dashed #2a3346; border-radius: 12px; padding: 40px 16px;
+    text-align: center; color: #8b95a7; cursor: pointer; transition: .15s;
+  }
+  #drop.hot { border-color: #4c8dff; background: #11161f; color: #c9d1d9; }
+  #drop strong { color: #e6edf3; }
+  input[type=file] { display: none; }
+  .log {
+    flex: 0 0 38%; overflow: auto; padding: 16px 20px;
+    border-bottom: 1px solid #1c2230; background: #0d111a;
+  }
+  .row { margin: 0 0 6px; white-space: pre-wrap; word-break: break-word; }
+  .tag {
+    display: inline-block; min-width: 78px; padding: 0 6px; margin-right: 8px;
+    border-radius: 4px; font-size: 11px; text-align: center;
+  }
+  .t-status { background: #1f2a44; color: #84a9ff; }
+  .t-tool   { background: #2a2540; color: #c7a6ff; }
+  .t-assistant { background: #16331f; color: #6fcf97; }
+  .t-result { background: #3a2f12; color: #f0c674; }
+  .t-error  { background: #3a1820; color: #ff8088; }
+  .report { flex: 1; min-height: 0; }
+  .report iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+  .empty { color: #56607a; padding: 40px; text-align: center; }
+  code { color: #84a9ff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>proof-console-web</h1>
+  <div class="meta" id="meta">连接中…</div>
+</header>
+<main>
+  <section class="left">
+    <div id="drop">
+      <p><strong>把任意文件拖到这里</strong></p>
+      <p>或点击选择 · jsonl / csv / zip / sqlite / 代码 / 二进制 都行</p>
+      <p style="font-size:12px;color:#56607a">Agent 自己判断格式并产出交互报告</p>
+    </div>
+    <input type="file" id="file" />
+    <p id="fileinfo" style="color:#6b7689;font-size:12px"></p>
+  </section>
+  <section class="right">
+    <div class="log" id="log"></div>
+    <div class="report" id="report">
+      <div class="empty">分析完成后，Agent 写出的 report.html 会渲染在这里。</div>
+    </div>
+  </section>
+</main>
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const log = document.getElementById('log');
+const report = document.getElementById('report');
+const meta = document.getElementById('meta');
+const fileinfo = document.getElementById('fileinfo');
+let busy = false;
+
+fetch('/health').then(r => r.json()).then(h => {
+  meta.textContent = `model=${h.model} · baseURL=${h.baseUrl} · apiKey=${h.hasKey ? 'set' : 'MISSING'}`;
+}).catch(() => meta.textContent = 'health 检查失败');
+
+function line(type, text) {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `<span class="tag t-${type}">${type}</span>`;
+  div.appendChild(document.createTextNode(text));
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+drop.addEventListener('click', () => fileInput.click());
+['dragenter', 'dragover'].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('hot'); }));
+['dragleave', 'drop'].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('hot'); }));
+drop.addEventListener('drop', ev => {
+  const f = ev.dataTransfer.files[0];
+  if (f) analyze(f);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) analyze(fileInput.files[0]);
+});
+
+async function analyze(file) {
+  if (busy) return;
+  busy = true;
+  log.innerHTML = '';
+  report.innerHTML = '<div class="empty">Agent 正在分析…</div>';
+  fileinfo.textContent = `${file.name} · ${file.size} bytes`;
+  line('status', `上传 ${file.name} (${file.size} bytes)…`);
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  let res;
+  try {
+    res = await fetch('/analyze', { method: 'POST', body: fd });
+  } catch (e) {
+    line('error', '请求失败: ' + e.message);
+    busy = false;
+    return;
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    line('error', `HTTP ${res.status}: ${t}`);
+    busy = false;
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const raw = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!raw) continue;
+      let ev;
+      try { ev = JSON.parse(raw); } catch { continue; }
+      render(ev);
+    }
+  }
+  busy = false;
+}
+
+function render(ev) {
+  if (ev.type === 'status') {
+    line('status', `${ev.stage}${ev.model ? ' · ' + ev.model : ''}${ev.bytes ? ' · ' + ev.bytes + 'B' : ''}`);
+  } else if (ev.type === 'assistant') {
+    line('assistant', ev.text);
+  } else if (ev.type === 'tool') {
+    const inp = JSON.stringify(ev.input);
+    line('tool', `${ev.name}(${inp.length > 200 ? inp.slice(0, 200) + '…' : inp})`);
+  } else if (ev.type === 'result') {
+    line('result', `${ev.subtype} · ${ev.durationMs}ms${ev.costUsd != null ? ' · $' + ev.costUsd : ''}`);
+    if (ev.summary) line('result', ev.summary);
+    if (ev.report) {
+      const f = document.createElement('iframe');
+      f.setAttribute('sandbox', 'allow-same-origin');
+      f.srcdoc = ev.report;
+      report.innerHTML = '';
+      report.appendChild(f);
+    } else {
+      report.innerHTML = '<div class="empty">Agent 未写出 report.html（见左侧日志）。</div>';
+    }
+  } else if (ev.type === 'error') {
+    line('error', ev.message);
+  }
+}
+</script>
+</body>
+</html>

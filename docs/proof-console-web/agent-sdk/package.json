@@ -1,0 +1,24 @@
+{
+  "name": "proof-console-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Drag any file into a browser; a Claude Agent SDK loop (via MiniMax) autonomously inspects it and writes back an interactive report.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "dev": "npm run build && node dist/server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.143",
+    "express": "^4.21.2",
+    "multer": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}
