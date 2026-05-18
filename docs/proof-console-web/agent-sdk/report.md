@@ -55,6 +55,11 @@
 - `dev` 脚本可换 watch 模式（`tsx watch`），目前一次性 build+run。
 - 大文件/并发场景可加 job 队列与速率限制。
 
+## 可分享纪要（talk-html）
+
+真机录像 + 真实证据的 HTML 纪要已发布：
+https://htmlpreview.github.io/?https://gist.githubusercontent.com/LiuShiyuMath/97c26722f47bd5e6b3fbbf8ba4f59f77/raw/proof-console-web-recap-20260518-113945.html
+
 ## 提交
 
 分支 `worktree-proof-console-web`，4 个原子提交：scaffold / lock / verifier-fixes / report。
