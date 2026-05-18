@@ -41,7 +41,10 @@ npm install
 open http://127.0.0.1:8920
 ```
 
-显式锁定凭据时：`cp .env.example .env` 并填 `ANTHROPIC_API_KEY`。
+推荐用 `.env` 锁定凭据（比从 `~/.zshrc` 挖 token 更安全）：
+`cp .env.example .env` 并填 `ANTHROPIC_API_KEY`。`.env` 已在 `.gitignore`。
+
+每次分析的 `workspace/<jobId>/` 在结果回贴后即删除；服务启动时也会清空残留目录。
 
 ## 如何验证 (how-to-verify)
 

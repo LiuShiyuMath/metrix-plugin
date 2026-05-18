@@ -160,7 +160,9 @@ function render(ev) {
     if (ev.summary) line('result', ev.summary);
     if (ev.report) {
       const f = document.createElement('iframe');
-      f.setAttribute('sandbox', 'allow-same-origin');
+      // allow-scripts (no allow-same-origin): the report's own JS runs, but in
+      // an opaque origin that cannot touch this page, cookies, or storage.
+      f.setAttribute('sandbox', 'allow-scripts');
       f.srcdoc = ev.report;
       report.innerHTML = '';
       report.appendChild(f);

@@ -22,7 +22,7 @@ import express, { type Request, type Response } from "express";
 import multer from "multer";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,6 +118,9 @@ app.post(
           cwd: jobDir,
           model: MODEL,
           permissionMode: "bypassPermissions",
+          // bypassPermissions is inert without this companion flag — the SDK
+          // only passes --allow-dangerously-skip-permissions when it is true.
+          allowDangerouslySkipPermissions: true,
           allowedTools: ["Read", "Glob", "Grep", "Bash", "Write", "Edit"],
           abortController: abort,
           maxTurns: 40,
@@ -145,7 +148,7 @@ app.post(
             subtype: message.subtype,
             isError: message.is_error,
             durationMs: message.duration_ms,
-            costUsd: (message as { total_cost_usd?: number }).total_cost_usd ?? null,
+            costUsd: message.total_cost_usd ?? null,
             summary: message.subtype === "success" ? message.result : null,
             report,
           });
@@ -155,9 +158,14 @@ app.post(
       send(res, { type: "error", message: err instanceof Error ? err.message : String(err) });
     } finally {
       res.end();
+      // report.html was already inlined into the result event; drop the job dir.
+      await rm(jobDir, { recursive: true, force: true }).catch(() => {});
     }
   },
 );
+
+// Clear any job dirs orphaned by a previous crash before accepting traffic.
+await rm(WORKSPACE, { recursive: true, force: true }).catch(() => {});
 
 app.listen(PORT, HOST, () => {
   console.log(`proof-console-web → http://${HOST}:${PORT}`);
