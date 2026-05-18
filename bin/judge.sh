@@ -70,6 +70,23 @@ pass_criteria() {
         .gen_exit_zero == true
       ' >/dev/null 2>&1 && echo true || echo false
       ;;
+    workflow-gate-checks)
+      printf '%s' "$m" | jq -e '
+        .gate_present == true and
+        .forced_present == true and
+        .advisory_pass_disabled == true and
+        .enable_tool_ok == true and
+        .gate_enforces_on_flag == true and
+        .empty_only_claimed == true and
+        .full_sequence_allowed == true and
+        .skip_blocked == true and
+        .backward_blocked == true and
+        .idempotent_allowed == true and
+        .bad_stage_invalid == true and
+        .non_issue_invalid == true and
+        .all_exit_zero == true
+      ' >/dev/null 2>&1 && echo true || echo false
+      ;;
     *) echo true ;;
   esac
 }
